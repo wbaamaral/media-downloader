@@ -12,8 +12,10 @@ on:
   push:
     tags:
     - '*'
+permissions:
+  contents: write
 jobs:
-  buildWindowsRelease:
+  release:
     runs-on:  windows-2022
     steps:
     -
@@ -22,7 +24,7 @@ jobs:
          repository: mhogomchungu/media-downloader
          path: MD
     -
-      name: Install Qt5
+      name: Install Qt 5
       uses: jurplel/install-qt-action@v3
       with:
         version: ${{ env.QT5_VERSION }}
@@ -33,28 +35,28 @@ jobs:
         target: 'desktop'
         tools: 'tools_mingw81,qt.tools.win32_mingw810'
     -
-      name: update env for Qt5
+      name: Add Qt 5 to PATH
       run: |
           Write-Output "${{github.workspace}}/qt5/Qt/Tools/mingw810_32/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
     -
-      name: Check GCC version and path for Qt5
+      name: Verify Qt 5 Toolchain
       run: |
           Write-Output (Get-Command c++.exe).Path
           c++.exe --version
     -
-      name: Download libs
+      name: Download Dependencies
       run: |
          New-Item -ItemType Directory -Path ${{github.workspace}}\tmp
          Invoke-WebRequest "https://github.com/mhogomchungu/media-downloader-git/releases/download/0.0.0/3rdParty.zip" -OutFile ${{github.workspace}}\tmp\3rdParty.zip
          Invoke-WebRequest "https://github.com/mhogomchungu/media-downloader-git/releases/download/0.0.0/libs.zip" -OutFile ${{github.workspace}}\tmp\libs.zip
          Invoke-WebRequest "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_x86.exe" -OutFile ${{github.workspace}}\tmp\yt-dlp_x86.exe
     -
-      name: Configure CMake for Qt5
+      name: Configure Qt 5
       env:
         CMAKE_PREFIX_PATH: "${{github.workspace}}/qt5/Qt/${{ env.QT5_VERSION }}"
       run: cmake -DOUTPUT_BASE_NAME=MediaDownloaderQt5 -DLIBRARIES_LOCATION=${{github.workspace}}\MediaDownloaderQt5\ -DOUTPUT_PATH=${{github.workspace}}\ -DSOURCE_PATH=${{github.workspace}}\MD\ -DCMAKE_VERBOSE_MAKEFILE=TRUE -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -G Ninja -S ${{github.workspace}}/MD/ -B ${{github.workspace}}/MD/build5
     -
-      name: Set Build version
+      name: Read Release Version
       run: |
 
         $data = [System.IO.File]::ReadAllText("${{github.workspace}}\MD\build5\version.h")
@@ -69,50 +71,50 @@ jobs:
 
         $VERSION = $VERSION.Replace('"',"")
 
-        echo "RELEASEVERSION=$VERSION" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "RELEASE_VERSION=$VERSION" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
     -
-      name: Reconfigure CMake for Qt5
+      name: Configure Qt 5 with Release Version
       env:
         CMAKE_PREFIX_PATH: "${{github.workspace}}/qt5/Qt/${{ env.QT5_VERSION }}"
         msystem: MINGW32
-      run: cmake -DOUTPUT_BASE_NAME=MediaDownloaderQt5 -DLIBRARIES_LOCATION=${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASEVERSION }}\ -DOUTPUT_PATH=${{github.workspace}}\ -DSOURCE_PATH=${{github.workspace}}\MD\ -DCMAKE_VERBOSE_MAKEFILE=TRUE -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -G Ninja -S ${{github.workspace}}/MD/ -B ${{github.workspace}}/MD/build5
+      run: cmake -DOUTPUT_BASE_NAME=MediaDownloaderQt5 -DLIBRARIES_LOCATION=${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASE_VERSION }}\ -DOUTPUT_PATH=${{github.workspace}}\ -DSOURCE_PATH=${{github.workspace}}\MD\ -DCMAKE_VERBOSE_MAKEFILE=TRUE -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -G Ninja -S ${{github.workspace}}/MD/ -B ${{github.workspace}}/MD/build5
     -
-      name: Print installer script for Qt5
+      name: Show Qt 5 Installer Script
       run : get-content ${{github.workspace}}\MD\build5\media-downloader_windows_installer_Qt5.iss
     -
-      name: Build Project for Qt5
+      name: Build Qt 5
       run: cmake --build ${{github.workspace}}/MD/build5
     -
-      name: Create MediaDownloaderQt5 archive
+      name: Stage Qt 5 Package
       run: |
-        New-Item -ItemType Directory -Path ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASEVERSION }}
-        New-Item -ItemType Directory -Path ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASEVERSION }}/local
+        New-Item -ItemType Directory -Path ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASE_VERSION }}
+        New-Item -ItemType Directory -Path ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASE_VERSION }}/local
 
-        Copy-Item -Path ${{github.workspace}}\MD\translations -Destination ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASEVERSION }} -Recurse
-        Copy-Item -Path ${{github.workspace}}\MD\build5\media-downloader.exe -Destination ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASEVERSION }}
+        Copy-Item -Path ${{github.workspace}}\MD\translations -Destination ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASE_VERSION }} -Recurse
+        Copy-Item -Path ${{github.workspace}}\MD\build5\media-downloader.exe -Destination ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASE_VERSION }}
 
-        Set-Location ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASEVERSION }}
+        Set-Location ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASE_VERSION }}
 
-        ${{github.workspace}}/qt5/Qt/${{ env.QT5_VERSION }}/${{ env.MINGW5_PATH }}/bin/windeployqt.exe ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASEVERSION }}/media-downloader.exe
+        ${{github.workspace}}/qt5/Qt/${{ env.QT5_VERSION }}/${{ env.MINGW5_PATH }}/bin/windeployqt.exe ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASE_VERSION }}/media-downloader.exe
 
-        Expand-Archive -Path ${{github.workspace}}\tmp\3rdParty.zip -DestinationPath ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASEVERSION }}
+        Expand-Archive -Path ${{github.workspace}}\tmp\3rdParty.zip -DestinationPath ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASE_VERSION }}
         Expand-Archive -Path ${{github.workspace}}\tmp\libs.zip -DestinationPath ${{github.workspace}}\tmp
 
-        Copy-Item ${{github.workspace}}\tmp\libs\* -Destination ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASEVERSION }} -Recurse
+        Copy-Item ${{github.workspace}}\tmp\libs\* -Destination ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASE_VERSION }} -Recurse
 
-        Remove-Item ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASEVERSION }}\3rdParty\ytdlp\yt-dlp_x86.exe
-        Copy-Item -Path ${{github.workspace}}\tmp\yt-dlp_x86.exe -Destination ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASEVERSION }}\3rdParty\ytdlp\yt-dlp_x86.exe
+        Remove-Item ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASE_VERSION }}\3rdParty\ytdlp\yt-dlp_x86.exe
+        Copy-Item -Path ${{github.workspace}}\tmp\yt-dlp_x86.exe -Destination ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASE_VERSION }}\3rdParty\ytdlp\yt-dlp_x86.exe
 
-        Compress-Archive -Path ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASEVERSION }} -DestinationPath ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASEVERSION }}.zip
+        Compress-Archive -Path ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASE_VERSION }} -DestinationPath ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASE_VERSION }}.zip
 
-        Remove-Item -Path ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASEVERSION }}\local
+        Remove-Item -Path ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASE_VERSION }}\local
     -
-      name: Make installer for Qt5
+      name: Build Qt 5 Installer
       uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
       with:
           path: MD/build5/media-downloader_windows_installer_Qt5.iss
     -
-      name: Install Qt6
+      name: Install Qt 6
       uses: jurplel/install-qt-action@v3
       with:
         version: ${{ env.QT6_VERSION }}
@@ -123,76 +125,77 @@ jobs:
         target: 'desktop'
         tools: 'tools_mingw1310'
     -
-      name: update env for Qt6
+      name: Add Qt 6 to PATH
       run: echo "${{github.workspace}}/qt6/Qt/Tools/mingw1310_64/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
     -
-      name: Check GCC version and path for Qt6
+      name: Verify Qt 6 Toolchain
       run: |
           Write-Output (Get-Command c++.exe).Path
           c++.exe --version
     -
-      name: Configure CMake for Qt6
+      name: Configure Qt 6
       env:
         CMAKE_PREFIX_PATH: "${{github.workspace}}/qt6/Qt/${{ env.QT6_VERSION }}"
-      run: cmake -DOUTPUT_BASE_NAME=MediaDownloaderQt6 -DLIBRARIES_LOCATION=${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASEVERSION }}\ -DOUTPUT_PATH=${{github.workspace}}\ -DSOURCE_PATH=${{github.workspace}}\MD\ -DBUILD_WITH_QT6=true -DCMAKE_VERBOSE_MAKEFILE=TRUE -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -G Ninja -S ${{github.workspace}}/MD/ -B ${{github.workspace}}/MD/build6
+      run: cmake -DOUTPUT_BASE_NAME=MediaDownloaderQt6 -DLIBRARIES_LOCATION=${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASE_VERSION }}\ -DOUTPUT_PATH=${{github.workspace}}\ -DSOURCE_PATH=${{github.workspace}}\MD\ -DBUILD_WITH_QT6=true -DCMAKE_VERBOSE_MAKEFILE=TRUE -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -G Ninja -S ${{github.workspace}}/MD/ -B ${{github.workspace}}/MD/build6
     -
-      name: Print installer script for Qt6
+      name: Show Qt 6 Installer Script
       run : get-content ${{github.workspace}}\MD\build6\media-downloader_windows_installer_Qt6.iss
     -
-      name: Build Project for Qt6
+      name: Build Qt 6
       run: cmake --build ${{github.workspace}}/MD/build6
     -
-      name: Create MediaDownloaderQt6 archive
+      name: Stage Qt 6 Package
       run: |
-        New-Item -ItemType Directory -Path ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASEVERSION }}
-        New-Item -ItemType Directory -Path ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASEVERSION }}/local
+        New-Item -ItemType Directory -Path ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASE_VERSION }}
+        New-Item -ItemType Directory -Path ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASE_VERSION }}/local
 
-        Copy-Item -Path ${{github.workspace}}\MD\translations -Destination ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASEVERSION }} -Recurse
-        Copy-Item -Path ${{github.workspace}}\MD\build6\media-downloader.exe -Destination ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASEVERSION }}
+        Copy-Item -Path ${{github.workspace}}\MD\translations -Destination ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASE_VERSION }} -Recurse
+        Copy-Item -Path ${{github.workspace}}\MD\build6\media-downloader.exe -Destination ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASE_VERSION }}
 
-        Set-Location ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASEVERSION }}
+        Set-Location ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASE_VERSION }}
 
-        ${{github.workspace}}/qt6/Qt/${{ env.QT6_VERSION }}/${{ env.MINGW6_PATH }}/bin/windeployqt6.exe ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASEVERSION }}\media-downloader.exe
+        ${{github.workspace}}/qt6/Qt/${{ env.QT6_VERSION }}/${{ env.MINGW6_PATH }}/bin/windeployqt6.exe ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASE_VERSION }}\media-downloader.exe
 
-        Expand-Archive -Path ${{github.workspace}}\tmp\3rdParty.zip -DestinationPath ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASEVERSION }}
+        Expand-Archive -Path ${{github.workspace}}\tmp\3rdParty.zip -DestinationPath ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASE_VERSION }}
 
-        Remove-Item "${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASEVERSION }}\3rdParty\wget\wget.exe"
+        Remove-Item "${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASE_VERSION }}\3rdParty\wget\wget.exe"
 
-        Invoke-WebRequest "https://github.com/rockdaboot/wget2/releases/download/v2.2.1/wget2.exe" -OutFile "${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASEVERSION }}\3rdParty\wget\wget2.exe"
+        Invoke-WebRequest "https://github.com/rockdaboot/wget2/releases/download/v2.2.1/wget2.exe" -OutFile "${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASE_VERSION }}\3rdParty\wget\wget2.exe"
 
-        Remove-Item ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASEVERSION }}\3rdParty\ytdlp\yt-dlp_x86.exe
-        Copy-Item -Path ${{github.workspace}}\tmp\yt-dlp_x86.exe -Destination ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASEVERSION }}\3rdParty\ytdlp\yt-dlp_x86.exe
+        Remove-Item ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASE_VERSION }}\3rdParty\ytdlp\yt-dlp_x86.exe
+        Copy-Item -Path ${{github.workspace}}\tmp\yt-dlp_x86.exe -Destination ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASE_VERSION }}\3rdParty\ytdlp\yt-dlp_x86.exe
 
-        Compress-Archive -Path ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASEVERSION }} -DestinationPath ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASEVERSION }}.zip
+        Compress-Archive -Path ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASE_VERSION }} -DestinationPath ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASE_VERSION }}.zip
 
-        Remove-Item -Path ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASEVERSION }}\local
+        Remove-Item -Path ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASE_VERSION }}\local
     -
-      name: Make installer for Qt6
+      name: Build Qt 6 Installer
       uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
       with:
           path: MD/build6/media-downloader_windows_installer_Qt6.iss
     -
-      name: Rename installers
+      name: Rename Installers
       run: |
-          Rename-Item -Path ${{github.workspace}}\MediaDownloaderQt5.exe -NewName ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASEVERSION }}.setup.exe
-          Rename-Item -Path ${{github.workspace}}\MediaDownloaderQt6.exe -NewName ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASEVERSION }}.setup.exe
+          Rename-Item -Path ${{github.workspace}}\MediaDownloaderQt5.exe -NewName ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASE_VERSION }}.setup.exe
+          Rename-Item -Path ${{github.workspace}}\MediaDownloaderQt6.exe -NewName ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASE_VERSION }}.setup.exe
     -
-     name: Get Hashes
+     name: Checksums
      run: | 
-          $MediaDownloaderQt5a = (Get-FileHash ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASEVERSION }}.zip).Hash.ToLower()
-          $MediaDownloaderQt5b = (Get-FileHash ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASEVERSION }}.setup.exe).Hash.ToLower()
-          $MediaDownloaderQt6a = (Get-FileHash ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASEVERSION }}.zip).Hash.ToLower()
-          $MediaDownloaderQt6b = (Get-FileHash ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASEVERSION }}.setup.exe).Hash.ToLower()
+          $MediaDownloaderQt5a = (Get-FileHash ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASE_VERSION }}.zip).Hash.ToLower()
+          $MediaDownloaderQt5b = (Get-FileHash ${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASE_VERSION }}.setup.exe).Hash.ToLower()
+          $MediaDownloaderQt6a = (Get-FileHash ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASE_VERSION }}.zip).Hash.ToLower()
+          $MediaDownloaderQt6b = (Get-FileHash ${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASE_VERSION }}.setup.exe).Hash.ToLower()
 
-          echo "$MediaDownloaderQt5a MediaDownloaderQt5-${{ env.RELEASEVERSION }}.zip`n$MediaDownloaderQt6a MediaDownloaderQt6-${{ env.RELEASEVERSION }}.zip`n$MediaDownloaderQt5b MediaDownloaderQt5-${{ env.RELEASEVERSION }}.setup.exe`n$MediaDownloaderQt6b MediaDownloaderQt6-${{ env.RELEASEVERSION }}.setup.exe" | Out-File -FilePath ${{github.workspace}}\ZWindowsHashes.txt -Encoding utf8 -Append 
+          echo "$MediaDownloaderQt5a MediaDownloaderQt5-${{ env.RELEASE_VERSION }}.zip`n$MediaDownloaderQt6a MediaDownloaderQt6-${{ env.RELEASE_VERSION }}.zip`n$MediaDownloaderQt5b MediaDownloaderQt5-${{ env.RELEASE_VERSION }}.setup.exe`n$MediaDownloaderQt6b MediaDownloaderQt6-${{ env.RELEASE_VERSION }}.setup.exe" | Out-File -FilePath ${{github.workspace}}\WindowsReleaseHashes.txt -Encoding utf8 -Append
     -
-      name: Post Releases
+      name: Publish Release
       uses: ncipollo/release-action@v1
       with:
-        artifacts: ${{github.workspace}}\ZWindowsHashes.txt,${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASEVERSION }}.zip,${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASEVERSION }}.setup.exe,${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASEVERSION }}.zip,${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASEVERSION }}.setup.exe
-        tag: ${{ env.RELEASEVERSION }}
+        artifacts: ${{github.workspace}}\WindowsReleaseHashes.txt,${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASE_VERSION }}.zip,${{github.workspace}}\MediaDownloaderQt5-${{ env.RELEASE_VERSION }}.setup.exe,${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASE_VERSION }}.zip,${{github.workspace}}\MediaDownloaderQt6-${{ env.RELEASE_VERSION }}.setup.exe
+        tag: ${{ env.RELEASE_VERSION }}
         commit: "main"
         allowUpdates: true
+        prerelease: true
         omitBody: true
         omitBodyDuringUpdate: true
         omitNameDuringUpdate: true

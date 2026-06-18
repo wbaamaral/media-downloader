@@ -105,14 +105,31 @@ A short list of distributions that have Media Downloader in their repositories a
 git clone https://github.com/mhogomchungu/media-downloader && cd media-downloader
 ```
 
-2. chmod it to make it a executeable
+2. chmod the helper script to make it executable
 ```console
 chmod +x build_linux.sh
 ```
 
-3. now run the shell script
+3. run the shell script
 ```console
 ./build_linux.sh
+```
+
+The helper scripts now follow the same flow:
+
+1. configure the build with CMake;
+2. compile with `cmake --build`;
+3. run the smoke tests through `ctest`;
+4. optionally launch the app when `RUN_AFTER_BUILD=1`.
+
+If you want to run the flow manually:
+
+```console
+mkdir build
+cd build
+cmake .. -DBUILD_TESTING=ON
+cmake --build . -j"$(nproc)"
+ctest --output-on-failure
 ```
 
 

@@ -1,4 +1,4 @@
-name: MediaDownloader4Linux
+name: Publish There Linux Git
 
 on:
   push:
@@ -8,13 +8,12 @@ on:
     - '*'
 
 jobs:
-  build:
+  dispatch:
     runs-on: ubuntu-latest
     steps:
-      - name: Repository Dispatch
+      - name: Dispatch Repository Event
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ secrets.MD_GIT_PUBLISH }}
           repository: mhogomchungu/media-downloader-git
           event-type: LinuxQt6Git
-

@@ -593,8 +593,6 @@ void settings::setMainWindowDimensions( QWidget * s )
 			auto h = m[ 3 ].toInt() ;
 
 			s->setGeometry( { x,y,w,h } ) ;
-
-			s->setFixedSize( s->size() ) ;
 		}
 	}
 }

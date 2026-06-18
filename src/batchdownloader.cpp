@@ -3002,13 +3002,6 @@ void batchdownloader::showHideControls()
 	m_ui.pbBDOptionsDownload->setVisible( show ) ;
 	m_ui.labelBDEngineName->setVisible( show ) ;
 	m_ui.cbEngineTypeBD->setVisible( show ) ;
-
-	if( m == 321 ){
-
-		m_ui.tableWidgetBD->resize( 771,441 ) ;
-	}else{
-		m_ui.tableWidgetBD->resize( 771,321 ) ;
-	}
 }
 
 void batchdownloader::enableAll()

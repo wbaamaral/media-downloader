@@ -14,19 +14,31 @@
    <string/>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QTabWidget" name="tabWidget">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>10</y>
-      <width>801</width>
-      <height>521</height>
-     </rect>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="leftMargin">
+     <number>10</number>
     </property>
-    <property name="currentIndex">
-     <number>4</number>
+    <property name="topMargin">
+     <number>10</number>
     </property>
-    <widget class="QWidget" name="tabBasickDownloader">
+    <property name="rightMargin">
+     <number>10</number>
+    </property>
+    <property name="bottomMargin">
+     <number>10</number>
+    </property>
+    <item>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="currentIndex">
+       <number>4</number>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <widget class="QWidget" name="tabBasickDownloader">
      <attribute name="title">
       <string>Basic Downloader</string>
      </attribute>
@@ -306,8 +318,8 @@
        <string/>
       </property>
      </widget>
-    </widget>
-    <widget class="QWidget" name="tabBatchDownloader">
+      </widget>
+      <widget class="QWidget" name="tabBatchDownloader">
      <attribute name="title">
       <string>Batch Downloader</string>
      </attribute>
@@ -834,7 +846,7 @@
        <string notr="true"/>
       </property>
      </widget>
-    </widget>
+      </widget>
     <widget class="QWidget" name="tabPlayListDownloader">
      <attribute name="title">
       <string>Playlist Downloader</string>
@@ -2835,7 +2847,9 @@ Exampe 2: ${gateway}:8080</string>
       </property>
      </widget>
     </widget>
-   </widget>
+     </widget>
+    </item>
+   </layout>
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>

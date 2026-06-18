@@ -18,9 +18,12 @@ cd ~/media-downloader
 rm -rf build
 mkdir build
 cd build
+cmake .. -DBUILD_TESTING=ON
 
-cmake ..
-make -j"$(nproc)"
+cmake --build . -j"$(nproc)"
+ctest --output-on-failure
 
-chmod +x media-downloader
-
+if [ "${RUN_AFTER_BUILD:-0}" = "1" ]; then
+    chmod +x media-downloader
+    ./media-downloader
+fi

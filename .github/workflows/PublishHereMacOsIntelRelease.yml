@@ -1,12 +1,15 @@
-name: Publish Here MacOS Intel Release
+name: Publish Here macOS Intel Release
 env:
   QT6_VERSION: "6.6.2"
+  BUILD_TYPE: "Release"
 on:
   push:
     tags:
     - '*'
+permissions:
+  contents: write
 jobs:
-  buildMacReleaseEvent:
+  release:
     runs-on: macos-14
     steps:
     -
@@ -15,7 +18,7 @@ jobs:
          repository: mhogomchungu/media-downloader
          path: MAC
     -
-      name: Install Qt6
+      name: Install Qt 6
       uses: jurplel/install-qt-action@v3
       with:
         version: ${{ env.QT6_VERSION }}
@@ -25,15 +28,15 @@ jobs:
         host: 'mac'
         target: 'desktop'
     -
-      name: Configure CMake
+      name: Configure Qt 6
       env:
         CMAKE_PREFIX_PATH: "${{github.workspace}}/qt6/Qt/${{ env.QT6_VERSION }}"
       run: cmake -DCMAKE_OSX_ARCHITECTURES="x86_64" -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/MediaDownloader -DBUILD_WITH_QT6=true -DSOURCE_PATH=${{github.workspace}}/MAC/ -DCMAKE_VERBOSE_MAKEFILE=FALSE -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -S ${{github.workspace}}/MAC/ -B ${{github.workspace}}/MAC/build6
     -
-      name: Build
+      name: Build App
       run: cmake --build ${{github.workspace}}/MAC/build6
     -
-      name: Download 3rdParty Apps
+      name: Stage Third-Party Assets
       run: |
            #aria2c -d ${{github.workspace}}/MAC/build6/MediaDownloader.app/Contents/MacOS/extra https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
 
@@ -45,34 +48,35 @@ jobs:
            aria2c -d ${{github.workspace}}/MAC/build6/MediaDownloader.app/Contents/MacOS/extra https://github.com/mhogomchungu/media-downloader-git/releases/download/0.0.0/ffmpeg-macos-intel.zip
 
            cd ${{github.workspace}}/MAC/build6/MediaDownloader.app/Contents/MacOS/extra
-           tar -xf ffmpeg-macos-intel.zip
+           unzip -o ffmpeg-macos-intel.zip
            rm -rf ffmpeg-macos-intel.zip
     -
-      name: Create img Bundle
+      name: Create DMG
       run: |
            cd ${{github.workspace}}/MAC/build6
            ${{github.workspace}}/qt6/Qt/${{ env.QT6_VERSION }}/macos/bin/macdeployqt6 MediaDownloader.app -dmg
-    - name: Create Version Env
+    - name: Read Version
       run: |
            version=`cat ${{github.workspace}}/MAC/build6/VERSION_INFO`
-           echo -n "VERSION_INFO=$version" >> "$GITHUB_ENV"
+           echo -n "RELEASE_VERSION=$version" >> "$GITHUB_ENV"
     -
-      name: Rename Bundle
+      name: Rename DMG
       run: |
-           cp ${{github.workspace}}/MAC/build6/MediaDownloader.dmg ${{github.workspace}}/MAC/build6/MediaDownloaderQt6-x86_64-${{ env.VERSION_INFO }}.dmg
+           cp ${{github.workspace}}/MAC/build6/MediaDownloader.dmg ${{github.workspace}}/MAC/build6/MediaDownloaderQt6-x86_64-${{ env.RELEASE_VERSION }}.dmg
     -
-     name: Get Hash
+     name: Checksum
      run: | 
           cd ${{github.workspace}}/MAC/build6
-          shasum -a 256 MediaDownloaderQt6-x86_64-${{ env.VERSION_INFO }}.dmg > ${{github.workspace}}/zMacOsIntelReleaseHash.txt
+          shasum -a 256 MediaDownloaderQt6-x86_64-${{ env.RELEASE_VERSION }}.dmg > ${{github.workspace}}/macOSIntelReleaseHash.txt
     -
-      name: Post Bundle
+      name: Publish Release
       uses: ncipollo/release-action@v1
       with:
-        artifacts: ${{github.workspace}}/zMacOsIntelReleaseHash.txt,${{github.workspace}}/MAC/build6/MediaDownloaderQt6-x86_64-${{ env.VERSION_INFO }}.dmg
-        tag: ${{ env.VERSION_INFO }}
+        artifacts: ${{github.workspace}}/macOSIntelReleaseHash.txt,${{github.workspace}}/MAC/build6/MediaDownloaderQt6-x86_64-${{ env.RELEASE_VERSION }}.dmg
+        tag: ${{ env.RELEASE_VERSION }}
         commit: "main"
         allowUpdates: true
+        prerelease: true
         omitBody: true
         omitBodyDuringUpdate: true
         omitNameDuringUpdate: true

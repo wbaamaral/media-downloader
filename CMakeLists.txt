@@ -17,6 +17,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set( PGR_VERSION "5.6.1" )
 set( COPYRIGHT_YEARS "2021-2026" )
 
+include(CTest)
+
 INCLUDE(GNUInstallDirs)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -56,6 +58,12 @@ else()
 endif()
 
 include_directories(${PROJECT_BINARY_DIR})
+
+if(APPLE)
+    set(MEDIA_DOWNLOADER_APP_TARGET MediaDownloader)
+else()
+    set(MEDIA_DOWNLOADER_APP_TARGET media-downloader)
+endif()
 
 # uninstall target
 configure_file(
@@ -122,38 +130,38 @@ set(RESOURCES src/icon.qrc )
 
 if(WIN32)
     set(APP_ICON_RESOURCE_WINDOWS "${CMAKE_CURRENT_SOURCE_DIR}/src/appicon.rc")
-    add_executable(media-downloader WIN32 ${SRC} ${MOC_FILES} ${UI_FILES} ${RESOURCES} ${APP_ICON_RESOURCE_WINDOWS})
-    set_target_properties(media-downloader PROPERTIES COMPILE_FLAGS "-Wextra -Wall -s -pedantic")
+    add_executable(${MEDIA_DOWNLOADER_APP_TARGET} WIN32 ${SRC} ${MOC_FILES} ${UI_FILES} ${RESOURCES} ${APP_ICON_RESOURCE_WINDOWS})
+    set_target_properties(${MEDIA_DOWNLOADER_APP_TARGET} PROPERTIES COMPILE_FLAGS "-Wextra -Wall -s -pedantic")
 else()
     if(APPLE)
         set(icon "${CMAKE_CURRENT_SOURCE_DIR}/src/media-downloader.icns")
-        add_executable(MediaDownloader MACOSX_BUNDLE ${SRC} ${MOC_FILES} ${UI_FILES} ${RESOURCES} ${icon})
-        set_target_properties(MediaDownloader PROPERTIES MACOSX_BUNDLE ON)
-        set_target_properties(MediaDownloader PROPERTIES COMPILE_FLAGS "-Wextra -Wall -s -fPIC -pedantic")
+        add_executable(${MEDIA_DOWNLOADER_APP_TARGET} MACOSX_BUNDLE ${SRC} ${MOC_FILES} ${UI_FILES} ${RESOURCES} ${icon})
+        set_target_properties(${MEDIA_DOWNLOADER_APP_TARGET} PROPERTIES MACOSX_BUNDLE ON)
+        set_target_properties(${MEDIA_DOWNLOADER_APP_TARGET} PROPERTIES COMPILE_FLAGS "-Wextra -Wall -s -fPIC -pedantic")
     else()
-        add_executable(media-downloader ${SRC} ${MOC_FILES} ${UI_FILES} ${RESOURCES})
-        set_target_properties(media-downloader PROPERTIES COMPILE_FLAGS "-Wextra -Wall -s -fPIC -pedantic")
+        add_executable(${MEDIA_DOWNLOADER_APP_TARGET} ${SRC} ${MOC_FILES} ${UI_FILES} ${RESOURCES})
+        set_target_properties(${MEDIA_DOWNLOADER_APP_TARGET} PROPERTIES COMPILE_FLAGS "-Wextra -Wall -s -fPIC -pedantic")
     endif()
 endif()
 
 if(BUILD_WITH_QT6)
     if(WIN32)
-        target_link_libraries(media-downloader Advapi32.lib Dwmapi.lib Iphlpapi.lib Qt6::Widgets Qt6::Core Qt6::Network)
+        target_link_libraries(${MEDIA_DOWNLOADER_APP_TARGET} Advapi32.lib Dwmapi.lib Iphlpapi.lib Qt6::Widgets Qt6::Core Qt6::Network)
     else()
         if(APPLE)
-            target_link_libraries(MediaDownloader Qt6::Widgets Qt6::Core Qt6::Network)
+            target_link_libraries(${MEDIA_DOWNLOADER_APP_TARGET} Qt6::Widgets Qt6::Core Qt6::Network)
         else()
-            target_link_libraries(media-downloader Qt6::Widgets Qt6::Core Qt6::Network)
+            target_link_libraries(${MEDIA_DOWNLOADER_APP_TARGET} Qt6::Widgets Qt6::Core Qt6::Network)
         endif()
     endif()
 else()
     if(WIN32)
-        target_link_libraries(media-downloader Advapi32.lib Dwmapi.lib Iphlpapi.lib Qt5::Widgets Qt5::Core Qt5::Network)
+        target_link_libraries(${MEDIA_DOWNLOADER_APP_TARGET} Advapi32.lib Dwmapi.lib Iphlpapi.lib Qt5::Widgets Qt5::Core Qt5::Network)
     else()
         if(APPLE)
-             target_link_libraries(MediaDownloader Qt5::Widgets Qt5::Core Qt5::Network)
+             target_link_libraries(${MEDIA_DOWNLOADER_APP_TARGET} Qt5::Widgets Qt5::Core Qt5::Network)
         else()
-            target_link_libraries(media-downloader Qt5::Widgets Qt5::Core Qt5::Network)
+            target_link_libraries(${MEDIA_DOWNLOADER_APP_TARGET} Qt5::Widgets Qt5::Core Qt5::Network)
         endif()
     endif()
 endif()
@@ -161,19 +169,48 @@ endif()
 if(APPLE)
 else()
     if(BUILD_FLATPAK)
-        set_target_properties( media-downloader PROPERTIES OUTPUT_NAME io.github.mhogomchungu.media-downloader)
-        install(TARGETS media-downloader RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+        set_target_properties( ${MEDIA_DOWNLOADER_APP_TARGET} PROPERTIES OUTPUT_NAME io.github.mhogomchungu.media-downloader)
+        install(TARGETS ${MEDIA_DOWNLOADER_APP_TARGET} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
         install(FILES src/flatpak/io.github.mhogomchungu.media-downloader.metainfo.xml DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/metainfo)
         install(FILES src/flatpak/io.github.mhogomchungu.media-downloader.png DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/512x512/apps)
         install(FILES src/flatpak/io.github.mhogomchungu.media-downloader.desktop DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
     else()
-        install(TARGETS media-downloader RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+        install(TARGETS ${MEDIA_DOWNLOADER_APP_TARGET} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
         install(FILES src/media-downloader.desktop DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
         install(FILES src/media-downloader.png DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pixmaps)
     endif()
 endif()
 
 install(DIRECTORY translations DESTINATION ${CMAKE_INSTALL_DATADIR}/media-downloader FILES_MATCHING PATTERN "*.qm")
+
+if(BUILD_TESTING)
+    set(MEDIA_DOWNLOADER_TESTS
+        -safaribooks
+        -yt-dlp
+        -yt-dlp-playlist
+        -yt-dlp-metadata
+        -yt-dlp-ffmpeg
+        -wget
+        -gallery-dl
+        -getsauce
+        -svtplay-dl
+        -lux
+    )
+
+    foreach(test_suffix IN LISTS MEDIA_DOWNLOADER_TESTS)
+        string(REPLACE "-" "_" test_name "engine${test_suffix}")
+        add_test(
+            NAME ${test_name}
+            COMMAND $<TARGET_FILE:${MEDIA_DOWNLOADER_APP_TARGET}> --media-downloader-test-engine${test_suffix}
+        )
+
+        if(UNIX AND NOT APPLE)
+            set_tests_properties(${test_name} PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+        endif()
+    endforeach()
+
+    add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure DEPENDS ${MEDIA_DOWNLOADER_APP_TARGET})
+endif()
 
 file(WRITE ${PROJECT_BINARY_DIR}/locale_path.h "\n#define TRANSLATION_PATH \"${CMAKE_INSTALL_FULL_DATADIR}/media-downloader/translations/\"\n")
 

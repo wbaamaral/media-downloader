@@ -26,7 +26,67 @@
 #include "settings.h"
 #include "translator.h"
 
+#include <QFrame>
+#include <QScrollArea>
+#include <QTabWidget>
+#include <QVBoxLayout>
+
+#include <algorithm>
 #include <csignal>
+
+namespace
+{
+	void wrapTabWidgetPages( QTabWidget * tabWidget )
+	{
+		if( !tabWidget ){
+			return ;
+		}
+
+		for( int i = 0 ; i < tabWidget->count() ; ++i ){
+
+			auto page = tabWidget->widget( i ) ;
+
+			if( !page || page->layout() ){
+				continue ;
+			}
+
+			auto scrollArea = new QScrollArea( page ) ;
+			scrollArea->setObjectName( page->objectName() + "_scrollArea" ) ;
+			scrollArea->setFrameShape( QFrame::NoFrame ) ;
+			scrollArea->setHorizontalScrollBarPolicy( Qt::ScrollBarAsNeeded ) ;
+			scrollArea->setVerticalScrollBarPolicy( Qt::ScrollBarAsNeeded ) ;
+			scrollArea->setWidgetResizable( true ) ;
+
+			auto container = new QWidget ;
+			container->setObjectName( page->objectName() + "_container" ) ;
+
+			auto maxWidth = 0 ;
+			auto maxHeight = 0 ;
+			const auto directChildren = page->findChildren< QWidget * >( QString(),Qt::FindDirectChildrenOnly ) ;
+
+			for( auto child : directChildren ){
+
+				if( !child ){
+					continue ;
+				}
+
+				const auto geometry = child->geometry() ;
+				child->setParent( container ) ;
+				child->setGeometry( geometry ) ;
+
+				maxWidth = std::max( maxWidth,geometry.right() ) ;
+				maxHeight = std::max( maxHeight,geometry.bottom() ) ;
+			}
+
+			container->setMinimumSize( maxWidth + 20,maxHeight + 20 ) ;
+			scrollArea->setWidget( container ) ;
+
+			auto layout = new QVBoxLayout( page ) ;
+			layout->setContentsMargins( 0, 0, 0, 0 ) ;
+			layout->addWidget( scrollArea ) ;
+		}
+	}
+}
 
 MainWindow::MainWindow( QApplication& app,
 			settings& s,
@@ -51,6 +111,9 @@ MainWindow::MainWindow( QApplication& app,
 
 	qRegisterMetaType< utility::networkReply >() ;
 	qRegisterMetaType< reportFinished >() ;
+
+	wrapTabWidgetPages( m_ui.get().tabWidget ) ;
+	wrapTabWidgetPages( m_ui.get().tabWidgetConfigure ) ;
 
 	m_settings.setMainWindowDimensions( this->window() ) ;
 

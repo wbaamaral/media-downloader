@@ -1,17 +1,16 @@
-name: Publish There MacOs Intel Release
+name: Publish There macOS Intel Release
 
 on:
   push:
     tags:
     - '*'
 jobs:
-  build:
+  dispatch:
     runs-on: macos-latest
     steps:
-      - name: Repository Dispatch
+      - name: Dispatch Repository Event
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ secrets.MD_GIT_PUBLISH }}
           repository: mhogomchungu/media-downloader-git
           event-type: PublishIntelMacRelease
-

@@ -28,7 +28,7 @@ if(Test-Path -Path $BUILD_PATH/MediaDownloader)
 
 New-Item -ItemType Directory -Path $BUILD_PATH/MediaDownloader
 
-cmake.exe -DCMAKE_VERBOSE_MAKEFILE=FALSE -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_PREFIX_PATH="$QT_PATH" -DLIBRARIES_LOCATION="$BUILD_PATH" -DOUTPUT_PATH="$BUILD_PATH" -DSOURCE_PATH="$SRC_LOCATION" -G "CodeBlocks - MinGW Makefiles" -S "$SRC_LOCATION" -B "$BUILD_PATH/MediaDownloader"
+cmake.exe -DCMAKE_VERBOSE_MAKEFILE=FALSE -DCMAKE_BUILD_TYPE:STRING=Release -DBUILD_TESTING=ON -DCMAKE_PREFIX_PATH="$QT_PATH" -DLIBRARIES_LOCATION="$BUILD_PATH" -DOUTPUT_PATH="$BUILD_PATH" -DSOURCE_PATH="$SRC_LOCATION" -G "CodeBlocks - MinGW Makefiles" -S "$SRC_LOCATION" -B "$BUILD_PATH/MediaDownloader"
 
 if($?)
 {
@@ -51,7 +51,7 @@ $VERSION = $versionInfo.Replace(".git_tag","")
 
 $VERSION = $VERSION.Replace('"',"")
 
-cmake.exe -DCMAKE_VERBOSE_MAKEFILE=FALSE -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_PREFIX_PATH="$QT_PATH" -DLIBRARIES_LOCATION="$BUILD_PATH/MediaDownloader-$VERSION" -DOUTPUT_PATH="$BUILD_PATH" -DSOURCE_PATH="$SRC_LOCATION" -G "CodeBlocks - MinGW Makefiles" -S "$SRC_LOCATION" -B "$BUILD_PATH/MediaDownloader"
+cmake.exe -DCMAKE_VERBOSE_MAKEFILE=FALSE -DCMAKE_BUILD_TYPE:STRING=Release -DBUILD_TESTING=ON -DCMAKE_PREFIX_PATH="$QT_PATH" -DLIBRARIES_LOCATION="$BUILD_PATH/MediaDownloader-$VERSION" -DOUTPUT_PATH="$BUILD_PATH" -DSOURCE_PATH="$SRC_LOCATION" -G "CodeBlocks - MinGW Makefiles" -S "$SRC_LOCATION" -B "$BUILD_PATH/MediaDownloader"
 
 if($?)
 {
@@ -70,6 +70,17 @@ if(Test-Path -Path $BUILD_PATH/MediaDownloader-$VERSION)
 cmake --build $BUILD_PATH/MediaDownloader
 
 if($?)
+{
+}
+else
+{
+   Read-Host "Press Enter To Exit"
+   exit
+}
+
+ctest --test-dir $BUILD_PATH/MediaDownloader --output-on-failure
+
+if($? )
 {
 }
 else

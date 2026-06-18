@@ -1,64 +1,77 @@
 # Media Downloader
 
-This project is a Qt/C++ based GUI frontend to CLI multiple CLI-based tools that deal with downloading online media.
+Portuguese version: [README.pt-BR.md](/home/wbaamaral/Desenvolvimento/0-aa-cerebro-wba/00-caixa-de-entrada/workspace/c++/media-downloader/README.pt-BR.md)
 
-[yt-dlp](https://github.com/yt-dlp/yt-dlp) CLI tool is the default supported tool and other tools can be added by
-downloading their extension and a list of supported extensions is managed [here](https://github.com/mhogomchungu/media-downloader/wiki/Extensions).
+This project is a Qt/C++ based graphical frontend for multiple CLI tools used to download online media.
+
+[yt-dlp](https://github.com/yt-dlp/yt-dlp) is the default supported tool. Other tools can be added by
+installing their extensions, and the list of supported extensions is maintained [here](https://github.com/mhogomchungu/media-downloader/wiki/Extensions).
 
 
-Features offered:-
+## Features
 
 1. The GUI can be used to download any media from any website supported by installed extensions.
 
-2. The GUI offers a configurable list of preset options that can be used to download media if they are provided in multiple formats.
+2. The GUI offers a configurable list of preset options that can be used when media is available in multiple formats.
 
 3. The GUI offers the ability to do an unlimited number of concurrent downloads. Be careful with this ability because doing too many concurrent
 downloads may cause the host to ban you.
 
 4. The GUI offers the ability to do batch downloads by entering individual links in the UI or telling the app to read them from a local file.
 
-5. The GUI offers an ability to download a playlist from websites that supports them like YouTube.
+5. The GUI offers the ability to download playlists from websites that support them, such as YouTube.
 
-6. The GUI offers the ability to manage links to playlists to easily monitor their activities(subscriptions).
+6. The GUI offers the ability to manage playlist links to monitor activity more easily.
 
-7. The GUI is offered in multiple languages and as of this writing, the supported languages are English, Chinese, Spanish, Polish, Turkish, Russian, Japanese, French, Italian, Portuguese, Arabic, Korean, Swedish, German, Greek and Ukrainian.
+7. The GUI is offered in multiple languages. The supported languages are English, Chinese, Spanish, Polish, Turkish, Russian, Japanese, French, Italian, Portuguese, Arabic, Korean, Swedish, German, Greek and Ukrainian.
 
 ## Extensions
 
 Media Downloader is a GUI front end to [yt-dlp](https://github.com/yt-dlp/yt-dlp), [gallery-dl](https://github.com/mikf/gallery-dl), [you-get](https://github.com/soimort/you-get), [svtplay-dl](https://github.com/spaam/svtplay-dl), [aria2c](https://aria2.github.io/), [wget](https://www.gnu.org/software/wget) and [get-sauce](https://github.com/gan-of-culture/get-sauce).
 
-To Install these extensins, go to "Configure" tab and then go to "Extensions" sub tab and then click the "Add An Extension" button and then select from the list an extension you want to install.
+To install these extensions, go to the `Configure` tab, open the `Extensions` sub tab, click `Add An Extension`, and select the extension you want to install.
 
 ## FAQ
-A Frequently asked Questions page is [here](https://github.com/mhogomchungu/media-downloader/wiki/Frequently-Asked-Questions).
+A Frequently Asked Questions page is [here](https://github.com/mhogomchungu/media-downloader/wiki/Frequently-Asked-Questions).
 
-#### Prerequisite before running for the first time
+#### Before running for the first time
 
-Make sure you have access to the internet before you run "Media Downloader" for the first time because it will attempt to use the internet to download the latest version of yt-dlp. Installing most extensions will also cause "Media Downloader" to access the internet to download the extension's executable.
+Make sure you have internet access before you run "Media Downloader" for the first time because it will attempt to download the latest version of yt-dlp. Installing most extensions will also cause "Media Downloader" to access the internet to download the extension executable.
+
+## Current status
+
+The project is currently aligned with pre-release `v5.6.1-rc.2` and includes:
+
+- startup flow improvements;
+- UI layout and responsiveness refinements;
+- initial window centering on the active monitor;
+- persistence of window state between runs;
+- Configure tab refinements;
+- fixes to engine discovery and execution flow.
 
 ## Binary packages
 
 #### Bundle for MacOS
 
-Bundle for arm64 build of MacOS is [here](https://github.com/mhogomchungu/media-downloader/releases/download/5.6.1/MediaDownloaderQt6-arm64-5.6.1.dmg).
+Bundle for the arm64 build of macOS is [here](https://github.com/mhogomchungu/media-downloader/releases/download/5.6.1/MediaDownloaderQt6-arm64-5.6.1.dmg).
 
-Bundle for x86_64 build of MacOS is [here](https://github.com/mhogomchungu/media-downloader/releases/download/5.6.1/MediaDownloaderQt6-x86_64-5.6.1.dmg).
+Bundle for the x86_64 build of macOS is [here](https://github.com/mhogomchungu/media-downloader/releases/download/5.6.1/MediaDownloaderQt6-x86_64-5.6.1.dmg).
 
-These bundles are not notarized and your system may report it as "corrupted". Search the internet on how to install bundles that are not notarized if you want to use this app on MacOS. This bundle works on macOS 14.0 or later.
+These bundles are not notarized and your system may report them as "corrupted". Search the internet for how to install bundles that are not notarized if you want to use this app on macOS. This bundle works on macOS 14.0 or later.
 
 #### Installer for Microsoft Windows
 
-Installer for Microsoft Windows that is 32 bit, build with Qt5 and has a minimum requirenment of windows 7 is [here](https://github.com/mhogomchungu/media-downloader/releases/download/5.6.1/MediaDownloaderQt5-5.6.1.setup.exe).
+Installer for Microsoft Windows that is 32 bit, built with Qt5 and has a minimum requirement of Windows 7 is [here](https://github.com/mhogomchungu/media-downloader/releases/download/5.6.1/MediaDownloaderQt5-5.6.1.setup.exe).
 
-Installer for Microsoft Windows that is 64 bit, build with Qt6 and has a minimum requirenment of windows 10 is [here](https://github.com/mhogomchungu/media-downloader/releases/download/5.6.1/MediaDownloaderQt6-5.6.1.setup.exe).
+Installer for Microsoft Windows that is 64 bit, built with Qt6 and has a minimum requirement of Windows 10 is [here](https://github.com/mhogomchungu/media-downloader/releases/download/5.6.1/MediaDownloaderQt6-5.6.1.setup.exe).
 
 #### Portable version for Microsoft Windows
 
-A portable version is a self-contained version that keeps everything in the application folder and does not need to be installed first.
+A portable version is self-contained, keeps everything in the application folder, and does not need to be installed first.
 
-Portable version for Microsoft Windows that is 32 bit, build with Qt5 and has a minimum requirenment of windows 7 is [here](https://github.com/mhogomchungu/media-downloader/releases/download/5.6.1/MediaDownloaderQt5-5.6.1.zip).
+Portable version for Microsoft Windows that is 32 bit, built with Qt5 and has a minimum requirement of Windows 7 is [here](https://github.com/mhogomchungu/media-downloader/releases/download/5.6.1/MediaDownloaderQt5-5.6.1.zip).
 
-Portable version for Microsoft Windows that is 64 bit, build with Qt6 and has a minimum requirenment of windows 10 is [here](https://github.com/mhogomchungu/media-downloader/releases/download/5.6.1/MediaDownloaderQt6-5.6.1.zip).
+Portable version for Microsoft Windows that is 64 bit, built with Qt6 and has a minimum requirement of Windows 10 is [here](https://github.com/mhogomchungu/media-downloader/releases/download/5.6.1/MediaDownloaderQt6-5.6.1.zip).
 
 You can also install the portable version for Windows using scoop with the following commands:
 
@@ -71,9 +84,9 @@ Install Media Downloader:
 scoop install media-downloader
 ```
 
-Git versions for windows and macos can be downloaded from [here](https://github.com/mhogomchungu/media-downloader-git/releases).
+Git versions for Windows and macOS can be downloaded from [here](https://github.com/mhogomchungu/media-downloader-git/releases).
 
-#### Problems with Windows's antivirus programs
+#### Problems with Windows antivirus programs
 
 Once in a while, Windows Defender and other antivirus tools will report this application as a virus/unsafe
 or Potentially unwanted. These are false positive reports and they are tracked [here](https://github.com/mhogomchungu/media-downloader/issues/481).
@@ -81,41 +94,41 @@ or Potentially unwanted. These are false positive reports and they are tracked [
 
 #### Flatpak
 
-Media Downloader is on [flathub](https://flathub.org/apps/io.github.mhogomchungu.media-downloader) for those who prefer to use flatpaks.
+Media Downloader is on [Flathub](https://flathub.org/apps/io.github.mhogomchungu.media-downloader) for those who prefer to use Flatpak.
 
-#### Aur package for Arch Linux
-Arch Linux users can build the project from source using [this](https://aur.archlinux.org/packages/media-downloader) aur package.
+#### AUR package for Arch Linux
+Arch Linux users can build the project from source using [this](https://aur.archlinux.org/packages/media-downloader) AUR package.
 
 #### Package for Fedora
-Media Downloader is in official Fedora repositories and can be installed by running ```sudo dnf -y install media-downloader```
+Media Downloader is in the official Fedora repositories and can be installed by running ```sudo dnf -y install media-downloader```
 
 ### Binary packages for other Linux distributions
 
-Binary packages i maintain for a few Linux distributions are [here](https://software.opensuse.org//download.html?project=home%3Aobs_mhogomchungu&package=media-downloader).
+Binary packages I maintain for a few Linux distributions are [here](https://software.opensuse.org//download.html?project=home%3Aobs_mhogomchungu&package=media-downloader).
 
 ### Packaging Status
 
-A short list of distributions that have Media Downloader in their repositories and the version they have is maintained [here](https://repology.org/project/media-downloader/badges).
+A short list of distributions that have Media Downloader in their repositories, and the version they ship, is maintained [here](https://repology.org/project/media-downloader/badges).
 
 
-# How to compile for Linux
+# How to compile on Linux
 
-1. clone the repo and cd into it
+1. Clone the repo and `cd` into it:
 ```console
 git clone https://github.com/mhogomchungu/media-downloader && cd media-downloader
 ```
 
-2. chmod the helper script to make it executable
+2. Make the helper script executable:
 ```console
 chmod +x build_linux.sh
 ```
 
-3. run the shell script
+3. Run the shell script:
 ```console
 ./build_linux.sh
 ```
 
-The helper scripts now follow the same flow:
+The helper scripts follow the same flow:
 
 1. configure the build with CMake;
 2. compile with `cmake --build`;

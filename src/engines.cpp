@@ -124,7 +124,14 @@ QProcessEnvironment engines::getEnvPaths() const
 		s += separator + basePath ;
 	}
 
-	env.insert( "PATH",s + separator + env.value( "PATH" ) ) ;
+	auto systemPath = env.value( "PATH" ) ;
+
+	if( utility::platformIsLinux() ){
+
+		systemPath = "/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:" + systemPath ;
+	}
+
+	env.insert( "PATH",s + separator + systemPath ) ;
 
 	env.insert( "LANG","C" ) ;
 
@@ -1121,6 +1128,8 @@ void engines::engine::parseMultipleCmdArgs( Logger& logger,
 					    int id )
 {
 	QString m ;
+	const auto internalExePath = m_exeFolderPath + "/" + m_commandName ;
+	const auto internalExists = QFileInfo( internalExePath ).exists() ;
 
 	if( this->supportingEngine() ){
 
@@ -1142,7 +1151,7 @@ void engines::engine::parseMultipleCmdArgs( Logger& logger,
 
 		if( this->validDownloadUrl() && !m_exeFolderPath.isEmpty() ){
 
-			m_exePath = m_exeFolderPath + "/" + m_commandName ;
+			m_exePath = internalExists ? internalExePath : m ;
 		}else{
 			m_valid = false ;
 			logger.add( utility::failedToFindExecutableString( m_commandName ),id ) ;
@@ -1167,7 +1176,7 @@ void engines::engine::parseMultipleCmdArgs( Logger& logger,
 					m_downloadUrl.clear() ;
 					m_exePath = m ;
 				}else{
-					m_exePath = m_exeFolderPath + "/" + m_commandName ;
+					m_exePath = internalExists ? internalExePath : m ;
 				}
 			}else{
 				if( m_parent.m_settings.useSystemEngine() ){
@@ -1175,7 +1184,7 @@ void engines::engine::parseMultipleCmdArgs( Logger& logger,
 					m_downloadUrl.clear() ;
 					m_exePath = m ;
 				}else{
-					m_exePath = m_exeFolderPath + "/" + m_commandName ;
+					m_exePath = internalExists ? internalExePath : m ;
 				}
 			}
 		}else{

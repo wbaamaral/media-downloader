@@ -703,16 +703,9 @@ configure::configure( const Context& ctx ) :
 	const auto proxy_type = proxy.types() ;
 
 	if( !utility::platformIsWindows() ){
-
-		auto systemProxyHeight = m_ui.rbUseSystemProxy->height() ;
 		m_ui.rbUseSystemProxy->hide() ;
-
-		const auto& fromEnv = m_ui.rbGetFromEnv ;
-
-		fromEnv->move( fromEnv->x(),fromEnv->y() - systemProxyHeight ) ;
-
-		const auto& manual = m_ui.rbUseManualProxy ;
-		manual->move( manual->x(),manual->y() - systemProxyHeight ) ;
+	}else{
+		m_ui.rbUseSystemProxy->show() ;
 	}
 
 	if( proxy_type.manual() ){
@@ -795,7 +788,13 @@ void configure::updateProxySettings( settings::proxySettings::Type s )
 
 void configure::confirmResetMakeVisible( bool e )
 {
-	m_ui.labelBaseConfirmResetPreset->setVisible( e ) ;
+	auto panel = m_ui.tabWidgetConfigure->findChild< QWidget * >( "configureConfirmPanel" ) ;
+
+	if( panel ){
+		panel->setVisible( e ) ;
+	}
+
+	m_ui.labelBaseConfirmResetPreset->setVisible( false ) ;
 	m_ui.labelBaseConfirmResetPresetText->setVisible( e ) ;
 	m_ui.pbConfigureConfirmResetNo->setVisible( e ) ;
 	m_ui.pbConfigureConfirmResetYes->setVisible( e ) ;
@@ -2057,6 +2056,12 @@ void configure::downloadDefaultOptions::save()
 
 void configure::setVisibilityEditConfigFeature( bool e )
 {
+	auto panel = m_ui.tabWidgetConfigure->findChild< QWidget * >( "configureEditPanel" ) ;
+
+	if( panel ){
+		panel->setVisible( e ) ;
+	}
+
 	m_ui.pbConfigureSaveEditOption->setVisible( e ) ;
 	m_ui.textEditConfigureEditOption->setVisible( e ) ;
 	m_ui.labelEditConfigOptions->setVisible( e ) ;

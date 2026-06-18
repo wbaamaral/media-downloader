@@ -27,6 +27,7 @@
 
 #include <QDir>
 #include <QFile>
+#include <QMainWindow>
 
 #include <cstring>
 #include <algorithm>
@@ -35,6 +36,9 @@
 
 #include <QPalette>
 #include <QStyleHints>
+#include <QGuiApplication>
+#include <QScreen>
+#include <QCursor>
 
 QString settings::monitorClipboadUrl( settings::tabName e )
 {
@@ -577,24 +581,101 @@ void settings::saveMainWindowDimensions( const QRect& s )
 	m_settings.setValue( "MainWindowDimensions",m ) ;
 }
 
-void settings::setMainWindowDimensions( QWidget * s )
+namespace
 {
-	if( m_settings.contains( "MainWindowDimensions" ) ){
+	QScreen * activeScreen()
+	{
+		auto screen = QGuiApplication::screenAt( QCursor::pos() ) ;
 
-		auto e = m_settings.value( "MainWindowDimensions" ).toString() ;
+		if( !screen ){
+			screen = QGuiApplication::primaryScreen() ;
+		}
 
-		auto m = util::split( e," " ) ;
+		return screen ;
+	}
 
-		if( m.size() == 4 ){
+	QRect clampGeometryToAvailable( QRect geometry,const QRect& available )
+	{
+		if( !available.isValid() ){
+			return geometry ;
+		}
 
-			auto x = m[ 0 ].toInt() ;
-			auto y = m[ 1 ].toInt() ;
-			auto w = m[ 2 ].toInt() ;
-			auto h = m[ 3 ].toInt() ;
+		if( geometry.width() > available.width() ){
+			geometry.setWidth( available.width() ) ;
+		}
 
-			s->setGeometry( { x,y,w,h } ) ;
+		if( geometry.height() > available.height() ){
+			geometry.setHeight( available.height() ) ;
+		}
+
+		if( !geometry.intersects( available ) ){
+			geometry.moveCenter( available.center() ) ;
+		}
+
+		auto maxX = available.right() - geometry.width() + 1 ;
+		auto maxY = available.bottom() - geometry.height() + 1 ;
+
+		auto xPos = std::max( available.left(),std::min( geometry.x(),maxX ) ) ;
+		auto yPos = std::max( available.top(),std::min( geometry.y(),maxY ) ) ;
+
+		geometry.moveLeft( xPos ) ;
+		geometry.moveTop( yPos ) ;
+
+		return geometry ;
+	}
+
+	QRect centeredGeometry( const QSize& size,const QRect& available )
+	{
+		auto geometry = QRect( QPoint( 0,0 ),size.boundedTo( available.size() ) ) ;
+		geometry.moveCenter( available.center() ) ;
+
+		return clampGeometryToAvailable( geometry,available ) ;
+	}
+}
+
+void settings::setMainWindowDimensions( QMainWindow * s )
+{
+	if( !s ){
+		return ;
+	}
+
+	auto screen = activeScreen() ;
+	auto available = screen ? screen->availableGeometry() : QRect() ;
+
+	auto restored = false ;
+
+	if( m_settings.contains( "MainWindowGeometry" ) ){
+
+		restored = s->restoreGeometry( m_settings.value( "MainWindowGeometry" ).toByteArray() ) ;
+	}
+
+	if( m_settings.contains( "MainWindowState" ) ){
+		s->restoreState( m_settings.value( "MainWindowState" ).toByteArray() ) ;
+	}
+
+	if( !restored ){
+		if( available.isValid() ){
+			s->setGeometry( centeredGeometry( { 845,630 },available ) ) ;
+		}else{
+			s->resize( 845,630 ) ;
+		}
+	}else if( available.isValid() && !( s->windowState() & ( Qt::WindowMaximized | Qt::WindowFullScreen ) ) ){
+		auto geometry = clampGeometryToAvailable( s->geometry(),available ) ;
+
+		if( geometry != s->geometry() ){
+			s->setGeometry( geometry ) ;
 		}
 	}
+}
+
+void settings::saveMainWindowState( QMainWindow * s )
+{
+	if( !s ){
+		return ;
+	}
+
+	m_settings.setValue( "MainWindowGeometry",s->saveGeometry() ) ;
+	m_settings.setValue( "MainWindowState",s->saveState() ) ;
 }
 
 int settings::tabNumber()

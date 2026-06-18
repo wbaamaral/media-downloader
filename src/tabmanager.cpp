@@ -23,6 +23,7 @@
 #include <QMimeData>
 #include <QClipboard>
 #include <QDateTime>
+#include <QTimer>
 
 tabManager::tabManager( settings& s,
 			translator& t,
@@ -50,19 +51,19 @@ tabManager::tabManager( settings& s,
 
 	if( m_clipboard ){
 
-		auto m = Qt::QueuedConnection ;
-		QObject::connect( m_clipboard,&QClipboard::changed,this,&tabManager::clipboardEvent,m ) ;
+		auto connectionType = Qt::QueuedConnection ;
+		QObject::connect( m_clipboard,&QClipboard::changed,this,&tabManager::clipboardEvent,connectionType ) ;
 	}
 
-	const auto& engines = m_ctx.Engines().getEngines() ;
+	const auto& availableEngines = m_ctx.Engines().getEngines() ;
 
-	if( engines.size() > 0 ){
+	if( availableEngines.size() > 0 ){
 
 		ui.tabWidget->setCurrentIndex( 0 ) ;
 
 		m_ctx.logger().updateView( true ) ;
 
-		m_ctx.getVersionInfo().checkMediaDownloaderUpdate( engines ) ;
+		m_ctx.getVersionInfo().checkMediaDownloaderUpdate( availableEngines ) ;
 	}else{
 		this->disableAll() ;
 
@@ -82,8 +83,8 @@ void tabManager::init_done()
 
 void tabManager::initDone()
 {
-	auto& m = m_ctx.Ui() ;
-	auto& s = m_ctx.Settings() ;
+	auto& ui = m_ctx.Ui() ;
+	auto& settings = m_ctx.Settings() ;
 
 	this->setDefaultEngines() ;
 
@@ -97,17 +98,17 @@ void tabManager::initDone()
 
 	utility::initDone() ;
 
-	if( s.tabNumber() == 3 ){
+	if( settings.tabNumber() == 3 ){
 
 		//We do not want to start with a library tab because it may hang the UI
 		//before it is completely visible
 
-		s.setTabNumber( 0 ) ;
+		settings.setTabNumber( 0 ) ;
 	}
 
-	m.tabWidget->setCurrentIndex( s.tabNumber() ) ;
+	ui.tabWidget->setCurrentIndex( settings.tabNumber() ) ;
 
-	switch( s.tabNumber() )
+	switch( settings.tabNumber() )
 	{
 		case 0 : m_basicdownloader.tabEntered() ; break ;
 		case 1 : m_batchdownloader.tabEntered() ; break ;
@@ -117,7 +118,7 @@ void tabManager::initDone()
 		case 5 : m_about.tabEntered() ; break ;
 	}
 
-	QObject::connect( m.tabWidget,&QTabWidget::currentChanged,[ this ]( int index ){
+	QObject::connect( ui.tabWidget,&QTabWidget::currentChanged,[ this ]( int index ){
 
 		switch( index )
 		{
@@ -145,7 +146,7 @@ void tabManager::initDone()
 		}
 	} ) ;
 
-	s.init_done() ;
+	settings.init_done() ;
 }
 
 void tabManager::setDefaultEngines()
@@ -166,9 +167,9 @@ void tabManager::setDefaultEngines()
 	m_configure.updateEnginesList( s ) ;
 }
 
-void tabManager::setProxy( const settings::proxySettings& proxy,const settings::proxySettings::type& m )
+void tabManager::setProxy( const settings::proxySettings& proxy,const settings::proxySettings::type& proxyType )
 {
-	proxy::set( m_ctx,m_firstTimeSettingProxy,proxy.proxyAddress(),m ) ;
+	proxy::set( m_ctx,m_firstTimeSettingProxy,proxy.proxyAddress(),proxyType ) ;
 }
 
 void tabManager::clipboardEvent( QClipboard::Mode mode )

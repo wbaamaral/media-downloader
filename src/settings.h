@@ -36,6 +36,8 @@
 
 class Logger ;
 class QApplication ;
+class QMainWindow ;
+class QWidget ;
 
 #include <QJsonObject>
 #include <QJsonArray>
@@ -270,7 +272,8 @@ public:
 	bool useSystemSupportingEngine() ;
 	bool useSystemEngine() ;
 
-	void setMainWindowDimensions( QWidget * ) ;
+	void setMainWindowDimensions( QMainWindow * ) ;
+	void saveMainWindowState( QMainWindow * ) ;
 
 	qint64 timeOutWaitingForClipboardData() ;
 

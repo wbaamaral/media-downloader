@@ -360,9 +360,9 @@ QString settings::gitHubDownloadUrl()
 
 	if( m.compare( "release",Qt::CaseInsensitive ) == 0 ){
 
-		return "https://api.github.com/repos/mhogomchungu/media-downloader/releases/latest" ;
+		return "https://api.github.com/repos/wbaamaral/media-downloader/releases/latest" ;
 	}else{
-		return "https://api.github.com/repos/mhogomchungu/media-downloader-git/releases/latest" ;
+		return "https://api.github.com/repos/wbaamaral/media-downloader-git/releases/latest" ;
 	}
 }
 
@@ -707,17 +707,17 @@ QIcon settings::getIcon( const QString& e )
 {
 	if( e == "media-downloader" ){
 
-		auto m = "io.github.mhogomchungu.media-downloader" ;
+		auto m = "io.github.wbaamaral.media-downloader" ;
 
 		return QIcon::fromTheme( m,QIcon( ":/media-downloader" ) ) ;
 
 	}else if( this->darkTheme() ){
 
-		auto m = "io.github.mhogomchungu.media-downloader_white_" + e ;
+		auto m = "io.github.wbaamaral.media-downloader_white_" + e ;
 
 		return QIcon::fromTheme( m,QIcon( ":/icons/white/" + e ) ) ;
 	}else{
-		auto m = "io.github.mhogomchungu.media-downloader_black_" + e ;
+		auto m = "io.github.wbaamaral.media-downloader_black_" + e ;
 
 		return QIcon::fromTheme( m,QIcon( ":/icons/black/" + e ) ) ;
 	}

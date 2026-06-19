@@ -54,7 +54,7 @@ about::about( const Context& ctx ) : m_ctx( ctx )
 
 void about::retranslateUi()
 {
-	auto url = ": <a href=\"https://github.com/mhogomchungu/media-downloader\">https://github.com/mhogomchungu/media-downloader</a>" ;
+	auto url = ": <a href=\"https://github.com/wbaamaral/media-downloader\">https://github.com/wbaamaral/media-downloader</a>" ;
 	auto version   = QObject::tr( "Version" ) ;
 	auto website   = QObject::tr( "Project Page" ) + url ;
 	auto copyright = QObject::tr( "Copyright" ) ;

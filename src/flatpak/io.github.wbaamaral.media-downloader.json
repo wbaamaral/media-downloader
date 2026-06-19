@@ -1,5 +1,5 @@
 {
-  "app-id" : "io.github.mhogomchungu.media-downloader",
+  "app-id" : "io.github.wbaamaral.media-downloader",
   "runtime" : "org.kde.Platform",
   "runtime-version" : "6.10",
   "sdk" : "org.kde.Sdk",
@@ -9,7 +9,7 @@
   "build-options" : {
     "append-path" : "/usr/lib/sdk/rust-stable/bin"
   },
-  "command" : "io.github.mhogomchungu.media-downloader",
+  "command" : "io.github.wbaamaral.media-downloader",
   "finish-args" : [
     "--share=ipc",
     "--socket=wayland",
@@ -7343,7 +7343,7 @@
       ]
     },
     {
-      "name" : "io.github.mhogomchungu.media-downloader",
+      "name" : "io.github.wbaamaral.media-downloader",
       "buildsystem" : "cmake",
       "config-opts" : [
         "-DCMAKE_BUILD_TYPE=release",

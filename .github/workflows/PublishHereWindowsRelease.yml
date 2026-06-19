@@ -21,7 +21,7 @@ jobs:
     -
       uses: actions/checkout@v4
       with:
-         repository: mhogomchungu/media-downloader
+         repository: wbaamaral/media-downloader
          path: MD
     -
       name: Install Qt 5
@@ -47,8 +47,8 @@ jobs:
       name: Download Dependencies
       run: |
          New-Item -ItemType Directory -Path ${{github.workspace}}\tmp
-         Invoke-WebRequest "https://github.com/mhogomchungu/media-downloader-git/releases/download/0.0.0/3rdParty.zip" -OutFile ${{github.workspace}}\tmp\3rdParty.zip
-         Invoke-WebRequest "https://github.com/mhogomchungu/media-downloader-git/releases/download/0.0.0/libs.zip" -OutFile ${{github.workspace}}\tmp\libs.zip
+         Invoke-WebRequest "https://github.com/wbaamaral/media-downloader-git/releases/download/0.0.0/3rdParty.zip" -OutFile ${{github.workspace}}\tmp\3rdParty.zip
+         Invoke-WebRequest "https://github.com/wbaamaral/media-downloader-git/releases/download/0.0.0/libs.zip" -OutFile ${{github.workspace}}\tmp\libs.zip
          Invoke-WebRequest "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_x86.exe" -OutFile ${{github.workspace}}\tmp\yt-dlp_x86.exe
     -
       name: Configure Qt 5

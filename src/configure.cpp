@@ -865,7 +865,7 @@ QString configure::setUrl( const QString& e )
 {
 	QString hash = "bb866ecef3937a9c392098e5f272f80a00153c22" ;
 
-	QString url = "https://raw.githubusercontent.com/mhogomchungu/media-downloader/" ;
+	QString url = "https://raw.githubusercontent.com/wbaamaral/media-downloader/" ;
 
 	return url + hash + "/extensions/" + e ;
 }

@@ -15,5 +15,5 @@ jobs:
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ secrets.MD_GIT_PUBLISH }}
-          repository: mhogomchungu/media-downloader-git
+          repository: wbaamaral/media-downloader-git
           event-type: LinuxQt6Git

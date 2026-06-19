@@ -15,7 +15,7 @@ jobs:
     -
       uses: actions/checkout@v4
       with:
-         repository: mhogomchungu/media-downloader
+         repository: wbaamaral/media-downloader
          path: MAC
     -
       name: Install Qt 6
@@ -45,7 +45,7 @@ jobs:
 
            cp ${{github.workspace}}/MAC/src/media-downloader.icns ${{github.workspace}}/MAC/build6/MediaDownloader.app/Contents/Resources/MediaDownloader.icns
 
-           aria2c -d ${{github.workspace}}/MAC/build6/MediaDownloader.app/Contents/MacOS/extra https://github.com/mhogomchungu/media-downloader-git/releases/download/0.0.0/ffmpeg-macos-intel.zip
+           aria2c -d ${{github.workspace}}/MAC/build6/MediaDownloader.app/Contents/MacOS/extra https://github.com/wbaamaral/media-downloader-git/releases/download/0.0.0/ffmpeg-macos-intel.zip
 
            cd ${{github.workspace}}/MAC/build6/MediaDownloader.app/Contents/MacOS/extra
            unzip -o ffmpeg-macos-intel.zip

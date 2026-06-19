@@ -169,11 +169,11 @@ endif()
 if(APPLE)
 else()
     if(BUILD_FLATPAK)
-        set_target_properties( ${MEDIA_DOWNLOADER_APP_TARGET} PROPERTIES OUTPUT_NAME io.github.mhogomchungu.media-downloader)
+        set_target_properties( ${MEDIA_DOWNLOADER_APP_TARGET} PROPERTIES OUTPUT_NAME io.github.wbaamaral.media-downloader)
         install(TARGETS ${MEDIA_DOWNLOADER_APP_TARGET} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-        install(FILES src/flatpak/io.github.mhogomchungu.media-downloader.metainfo.xml DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/metainfo)
-        install(FILES src/flatpak/io.github.mhogomchungu.media-downloader.png DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/512x512/apps)
-        install(FILES src/flatpak/io.github.mhogomchungu.media-downloader.desktop DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
+        install(FILES src/flatpak/io.github.wbaamaral.media-downloader.metainfo.xml DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/metainfo)
+        install(FILES src/flatpak/io.github.wbaamaral.media-downloader.png DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/512x512/apps)
+        install(FILES src/flatpak/io.github.wbaamaral.media-downloader.desktop DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
     else()
         install(TARGETS ${MEDIA_DOWNLOADER_APP_TARGET} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
         install(FILES src/media-downloader.desktop DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
@@ -250,7 +250,7 @@ file(WRITE ${PROJECT_BINARY_DIR}/media-downloader_windows_installer_Qt6.iss
 #define MyAppName            \"Media Downloader\"
 #define MyAppVersion         \"${PGR_VERSION}\"
 #define MyAppPublisher       \"Francis Banyikwa\"
-#define MyAppURL             \"https://github.com/mhogomchungu/media-downloader\"
+#define MyAppURL             \"https://github.com/wbaamaral/media-downloader\"
 #define MyAppExeName         \"media-downloader.exe\"
 #define MyAppCopyright       \"${COPYRIGHT_YEARS}, Francis Banyikwa\"
 #define MyEXELocation        \"${PROJECT_BINARY_DIR}\\media-downloader.exe\"
@@ -352,7 +352,7 @@ file(WRITE ${PROJECT_BINARY_DIR}/media-downloader_windows_installer_Qt5.iss
 #define MyAppName            \"Media Downloader\"
 #define MyAppVersion         \"${PGR_VERSION}\"
 #define MyAppPublisher       \"Francis Banyikwa\"
-#define MyAppURL             \"https://github.com/mhogomchungu/media-downloader\"
+#define MyAppURL             \"https://github.com/wbaamaral/media-downloader\"
 #define MyAppExeName         \"media-downloader.exe\"
 #define MyAppCopyright       \"${COPYRIGHT_YEARS}, Francis Banyikwa\"
 #define MyEXELocation        \"${PROJECT_BINARY_DIR}\\media-downloader.exe\"

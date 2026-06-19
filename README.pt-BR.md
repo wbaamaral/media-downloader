@@ -1,10 +1,10 @@
 # Media Downloader
 
-English version: [README.md](/home/wbaamaral/Desenvolvimento/0-aa-cerebro-wba/00-caixa-de-entrada/workspace/c++/media-downloader/README.md)
+English version: [README.md](README.md)
 
 Este projeto é uma interface gráfica em Qt/C++ para ferramentas de linha de comando usadas para baixar mídia online.
 
-O utilitário CLI [yt-dlp](https://github.com/yt-dlp/yt-dlp) é a ferramenta padrão com suporte principal. Outras ferramentas podem ser adicionadas por meio de extensões, e a lista de extensões suportadas é mantida [aqui](https://github.com/mhogomchungu/media-downloader/wiki/Extensions).
+O utilitário CLI [yt-dlp](https://github.com/yt-dlp/yt-dlp) é a ferramenta padrão com suporte principal. Outras ferramentas podem ser adicionadas por meio de extensões, e a lista de extensões suportadas é mantida [aqui](https://github.com/wbaamaral/media-downloader/wiki/Extensions).
 
 ## Funcionalidades
 
@@ -24,7 +24,7 @@ Para instalar extensões, vá até a aba `Configure`, depois à subaba `Extensio
 
 ## FAQ
 
-A página de perguntas frequentes está [aqui](https://github.com/mhogomchungu/media-downloader/wiki/Frequently-Asked-Questions).
+A página de perguntas frequentes está [aqui](https://github.com/wbaamaral/media-downloader/wiki/Frequently-Asked-Questions).
 
 ## Antes de executar pela primeira vez
 
@@ -47,25 +47,25 @@ O projeto está alinhado com a pre-release `v5.6.1-rc.2` e já inclui:
 
 ### Bundle para macOS
 
-Bundle para `arm64` do macOS: [aqui](https://github.com/mhogomchungu/media-downloader/releases/download/5.6.1/MediaDownloaderQt6-arm64-5.6.1.dmg).
+Bundle para `arm64` do macOS: [aqui](https://github.com/wbaamaral/media-downloader/releases/download/v5.6.1-rc.2/MediaDownloaderQt6-arm64-v5.6.1-rc.2.dmg).
 
-Bundle para `x86_64` do macOS: [aqui](https://github.com/mhogomchungu/media-downloader/releases/download/5.6.1/MediaDownloaderQt6-x86_64-5.6.1.dmg).
+Bundle para `x86_64` do macOS: [aqui](https://github.com/wbaamaral/media-downloader/releases/download/v5.6.1-rc.2/MediaDownloaderQt6-x86_64-v5.6.1-rc.2.dmg).
 
 Esses bundles não são notarizados e o sistema pode reportá-los como corrompidos. Consulte a documentação do macOS sobre como instalar aplicativos não notarizados, caso queira usar este app nessa plataforma. Este bundle funciona no macOS 14.0 ou superior.
 
 ### Instalador para Microsoft Windows
 
-Instalador para Microsoft Windows 32 bits, construído com Qt5 e com requisito mínimo de Windows 7: [aqui](https://github.com/mhogomchungu/media-downloader/releases/download/5.6.1/MediaDownloaderQt5-5.6.1.setup.exe).
+Instalador para Microsoft Windows 32 bits, construído com Qt5 e com requisito mínimo de Windows 7: [aqui](https://github.com/wbaamaral/media-downloader/releases/download/v5.6.1-rc.2/MediaDownloaderQt5-v5.6.1-rc.2.setup.exe).
 
-Instalador para Microsoft Windows 64 bits, construído com Qt6 e com requisito mínimo de Windows 10: [aqui](https://github.com/mhogomchungu/media-downloader/releases/download/5.6.1/MediaDownloaderQt6-5.6.1.setup.exe).
+Instalador para Microsoft Windows 64 bits, construído com Qt6 e com requisito mínimo de Windows 10: [aqui](https://github.com/wbaamaral/media-downloader/releases/download/v5.6.1-rc.2/MediaDownloaderQt6-v5.6.1-rc.2.setup.exe).
 
 ### Versão portátil para Microsoft Windows
 
 A versão portátil é autocontida, guarda tudo dentro da pasta da aplicação e não precisa ser instalada antes.
 
-Versão portátil para Microsoft Windows 32 bits, construída com Qt5 e com requisito mínimo de Windows 7: [aqui](https://github.com/mhogomchungu/media-downloader/releases/download/5.6.1/MediaDownloaderQt5-5.6.1.zip).
+Versão portátil para Microsoft Windows 32 bits, construída com Qt5 e com requisito mínimo de Windows 7: [aqui](https://github.com/wbaamaral/media-downloader/releases/download/v5.6.1-rc.2/MediaDownloaderQt5-v5.6.1-rc.2.zip).
 
-Versão portátil para Microsoft Windows 64 bits, construída com Qt6 e com requisito mínimo de Windows 10: [aqui](https://github.com/mhogomchungu/media-downloader/releases/download/5.6.1/MediaDownloaderQt6-5.6.1.zip).
+Versão portátil para Microsoft Windows 64 bits, construída com Qt6 e com requisito mínimo de Windows 10: [aqui](https://github.com/wbaamaral/media-downloader/releases/download/v5.6.1-rc.2/MediaDownloaderQt6-v5.6.1-rc.2.zip).
 
 Você também pode instalar a versão portátil no Windows via Scoop:
 
@@ -81,15 +81,15 @@ Instalar o Media Downloader:
 scoop install media-downloader
 ```
 
-Versões `git` para Windows e macOS podem ser baixadas [aqui](https://github.com/mhogomchungu/media-downloader-git/releases).
+Versões `git` para Windows e macOS podem ser baixadas [aqui](https://github.com/wbaamaral/media-downloader-git/releases).
 
 ### Problemas com antivírus no Windows
 
-De vez em quando, o Windows Defender e outros antivírus podem marcar o aplicativo como vírus/ameaça ou como software potencialmente indesejado. Esses relatórios são falsos positivos e são acompanhados [aqui](https://github.com/mhogomchungu/media-downloader/issues/481).
+De vez em quando, o Windows Defender e outros antivírus podem marcar o aplicativo como vírus/ameaça ou como software potencialmente indesejado. Esses relatórios são falsos positivos e são acompanhados [aqui](https://github.com/wbaamaral/media-downloader/issues/481).
 
 ### Flatpak
 
-O Media Downloader está no [Flathub](https://flathub.org/apps/io.github.mhogomchungu.media-downloader) para quem prefere usar Flatpak.
+O Media Downloader está no [Flathub](https://flathub.org/apps/io.github.wbaamaral.media-downloader) para quem prefere usar Flatpak.
 
 ### Pacote AUR para Arch Linux
 
@@ -105,7 +105,7 @@ sudo dnf -y install media-downloader
 
 ### Pacotes binários para outras distribuições Linux
 
-Pacotes binários mantidos para algumas distribuições Linux estão [aqui](https://software.opensuse.org//download.html?project=home%3Aobs_mhogomchungu&package=media-downloader).
+Pacotes binários mantidos para algumas distribuições Linux estão [aqui](https://software.opensuse.org//download.html?project=home%3Awbaamaral&package=media-downloader).
 
 ### Status dos empacotamentos
 
@@ -116,7 +116,7 @@ Uma lista resumida das distribuições que possuem o Media Downloader em seus re
 1. Clone o repositório e entre nele:
 
 ```console
-git clone https://github.com/mhogomchungu/media-downloader && cd media-downloader
+git clone https://github.com/wbaamaral/media-downloader && cd media-downloader
 ```
 
 2. Torne o script auxiliar executável:
@@ -166,19 +166,19 @@ Usuários do Arch Linux podem usar o script abaixo para compilar a partir do có
 
 ## Capturas de tela
 
-![media-downloader.png](https://raw.githubusercontent.com/mhogomchungu/media-downloader/main/images/media-downloader-1.png)
+![media-downloader.png](https://raw.githubusercontent.com/wbaamaral/media-downloader/main/images/media-downloader-1.png)
 
-![media-downloader.png](https://raw.githubusercontent.com/mhogomchungu/media-downloader/main/images/media-downloader-2.png)
+![media-downloader.png](https://raw.githubusercontent.com/wbaamaral/media-downloader/main/images/media-downloader-2.png)
 
-![media-downloader.png](https://raw.githubusercontent.com/mhogomchungu/media-downloader/main/images/media-downloader-3.png)
+![media-downloader.png](https://raw.githubusercontent.com/wbaamaral/media-downloader/main/images/media-downloader-3.png)
 
-![media-downloader.png](https://raw.githubusercontent.com/mhogomchungu/media-downloader/main/images/media-downloader-4.png)
+![media-downloader.png](https://raw.githubusercontent.com/wbaamaral/media-downloader/main/images/media-downloader-4.png)
 
-![media-downloader.png](https://raw.githubusercontent.com/mhogomchungu/media-downloader/main/images/media-downloader-5.png)
+![media-downloader.png](https://raw.githubusercontent.com/wbaamaral/media-downloader/main/images/media-downloader-5.png)
 
-![media-downloader.png](https://raw.githubusercontent.com/mhogomchungu/media-downloader/main/images/media-downloader-6.png)
+![media-downloader.png](https://raw.githubusercontent.com/wbaamaral/media-downloader/main/images/media-downloader-6.png)
 
-![media-downloader.png](https://raw.githubusercontent.com/mhogomchungu/media-downloader/main/images/media-downloader-7.png)
+![media-downloader.png](https://raw.githubusercontent.com/wbaamaral/media-downloader/main/images/media-downloader-7.png)
 
 ## Aviso
 

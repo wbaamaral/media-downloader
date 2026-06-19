@@ -68,7 +68,7 @@ int start( int argc,char * argv[],
 
 	if( utility::platformisFlatPak() ){
 
-		mqApp.setDesktopFileName( "io.github.mhogomchungu.media-downloader" ) ;
+		mqApp.setDesktopFileName( "io.github.wbaamaral.media-downloader" ) ;
 	}else{
 		mqApp.setDesktopFileName( "media-downloader" ) ;
 	}

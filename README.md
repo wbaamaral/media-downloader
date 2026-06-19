@@ -1,6 +1,6 @@
 # Media Downloader
 
-Portuguese version: [README.pt-BR.md](/home/wbaamaral/Desenvolvimento/0-aa-cerebro-wba/00-caixa-de-entrada/workspace/c++/media-downloader/README.pt-BR.md)
+Portuguese version: [README.pt-BR.md](https://github.com/wbaamaral/media-downloader/blob/f1dcd126dc21c56668c7891744d7a8629a55f7c0/README.pt-BR.md)
 
 This project is a Qt/C++ based graphical frontend for multiple CLI tools used to download online media.
 

@@ -174,6 +174,28 @@ endif()
 
 install(DIRECTORY translations DESTINATION ${CMAKE_INSTALL_DATADIR}/media-downloader FILES_MATCHING PATTERN "*.qm")
 
+# ── CPack (empacotamento DEB/RPM) ─────────────────────────────────────────────
+set(CPACK_PACKAGE_NAME "media-downloader")
+set(CPACK_PACKAGE_VERSION "${PGR_VERSION}")
+set(CPACK_PACKAGE_CONTACT "wbaamaral")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "GUI frontend to yt-dlp, gallery-dl and others")
+set(CPACK_PACKAGE_VENDOR "Media Downloader")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
+
+# DEB
+set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+set(CPACK_DEBIAN_PACKAGE_DEPENDS
+    "qtbase5-dev (>= 5.15) | qt6-base-dev (>= 6.2), libqt5websockets5-dev | qt6-websockets-dev")
+
+# RPM
+set(CPACK_RPM_PACKAGE_GROUP "Applications/Multimedia")
+set(CPACK_RPM_PACKAGE_LICENSE "GPLv2+")
+set(CPACK_RPM_PACKAGE_REQUIRES "qt5-qtbase >= 5.15 or qt6-qtbase >= 6.2")
+set(CPACK_RPM_PACKAGE_AUTOREQ ON)
+
+include(CPack)
+
 file(WRITE ${PROJECT_BINARY_DIR}/locale_path.h "\n#define TRANSLATION_PATH \"${CMAKE_INSTALL_FULL_DATADIR}/media-downloader/translations/\"\n")
 
 set( OutputBaseFilename "MediaDownloader-${PGR_VERSION}.setup" )

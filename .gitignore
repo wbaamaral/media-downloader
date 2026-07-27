@@ -11,6 +11,8 @@ compile_commands.json
 # build dir
 build/
 out/
+dist/
+logs/
 
 # spec repo (separate repo, not part of mediadw)
 spec/

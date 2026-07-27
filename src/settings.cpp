@@ -196,11 +196,6 @@ bool settings::printMediaPlayers()
 	return m_printMediaPlayers ;
 }
 
-bool settings::checkForEnginesUpdates()
-{
-	return this->getOption( "CheckForEnginesUpdates",true ) ;
-}
-
 bool settings::autoHideDownloadWhenCompleted()
 {
 	return this->getOption( "AutoHideDownloadWhenCompleted",false ) ;
@@ -290,11 +285,6 @@ Qt::Alignment settings::textAlignment()
 void settings::setEnableLibraryTab( bool e )
 {
 	m_settings.setValue( "EnableLibraryTab",e ) ;
-}
-
-void settings::setCheckForUpdates( bool e )
-{
-	m_settings.setValue( "CheckForUpdates",e ) ;
 }
 
 void settings::setUseInternalArchiveFile( bool e )
@@ -575,12 +565,8 @@ void settings::setMainWindowDimensions( QWidget * s )
 
 			auto x = m[ 0 ].toInt() ;
 			auto y = m[ 1 ].toInt() ;
-			auto w = m[ 2 ].toInt() ;
-			auto h = m[ 3 ].toInt() ;
 
-			s->setGeometry( { x,y,w,h } ) ;
-
-			s->setFixedSize( s->size() ) ;
+			s->move( x,y ) ;
 		}
 	}
 }
@@ -812,11 +798,6 @@ void settings::setTheme( QApplication& app,const QString& themeBasePath )
 	themes( this->themeName(),themeBasePath ).set( app ) ;
 }
 
-void settings::setUseSystemProvidedVersionIfAvailable( bool e )
-{
-	m_settings.setValue( "UseSystemProvidedVersionIfAvailable",e ) ;
-}
-
 void settings::setShowMetaDataInBatchDownloader( bool e )
 {
 	m_settings.setValue( "ShowMetaDataInBatchDownloader",e ) ;
@@ -984,9 +965,7 @@ void settings::setShowVersionInfoAndAutoDownloadUpdates( bool e )
 
 QString settings::textEncoding( const QString& engineName )
 {
-	auto m = m_settings.value( "YtDlpTextEncoding" ).toString() ;
-
-	return this->getOption( "TextEncoding_" + engineName,m ) ;
+	return this->getOption( "TextEncoding_" + engineName,QString() ) ;
 }
 
 void settings::setTextEncoding( const QString& e,const QString& engineName )
@@ -1256,9 +1235,16 @@ QString settings::localizationLanguagePath()
 
 		return utility::OSXtranslationFilesPath() ;
 	}else{
-		auto m = QCoreApplication::applicationDirPath() ;
+		auto appDir = QCoreApplication::applicationDirPath() ;
 
-		return m + "/../share/media-downloader/translations/" ;
+		auto devPath = appDir + "/../translations" ;
+
+		if( QDir( devPath ).exists() ){
+
+			return devPath ;
+		}
+
+		return appDir + "/../share/media-downloader/translations/" ;
 	}
 }
 

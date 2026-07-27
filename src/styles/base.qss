@@ -1,0 +1,192 @@
+/* Base Styles - media-downloader */
+/* Estilos globais - cores de fundo/texto vem do QPalette */
+
+/* ============================================ */
+/* GLOBAL                                       */
+/* ============================================ */
+
+* {
+    font-family: "Segoe UI", "Noto Sans", "Ubuntu", sans-serif;
+    font-size: 13px;
+}
+
+/* ============================================ */
+/* BOTOES                                       */
+/* ============================================ */
+
+QPushButton {
+    min-height: 32px;
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    border: 1px solid #CBD5E1;
+}
+
+QPushButton:hover {
+    border-color: #94A3B8;
+}
+
+QPushButton:pressed {
+    border-color: #64748B;
+}
+
+QPushButton:disabled {
+    opacity: 0.5;
+}
+
+/* ============================================ */
+/* INPUTS                                       */
+/* ============================================ */
+
+QLineEdit, QPlainTextEdit {
+    min-height: 28px;
+    padding: 4px 8px;
+    border: 1px solid #CBD5E1;
+    border-radius: 6px;
+}
+
+QLineEdit:focus, QPlainTextEdit:focus {
+    border-color: #2563EB;
+}
+
+QLineEdit:hover, QPlainTextEdit:hover {
+    border-color: #94A3B8;
+}
+
+/* ============================================ */
+/* COMBO BOX                                    */
+/* ============================================ */
+
+QComboBox {
+    min-height: 28px;
+    padding: 4px 8px;
+    border: 1px solid #CBD5E1;
+    border-radius: 6px;
+}
+
+QComboBox:hover {
+    border-color: #94A3B8;
+}
+
+QComboBox::drop-down {
+    border: none;
+    width: 24px;
+}
+
+QComboBox::down-arrow {
+    image: none;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid #64748B;
+}
+
+/* ============================================ */
+/* TABS                                         */
+/* ============================================ */
+
+QTabWidget::pane {
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+}
+
+QTabBar::tab {
+    padding: 8px 16px;
+    margin-right: 2px;
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+}
+
+QTabBar::tab:selected {
+    border-color: #CBD5E1;
+}
+
+/* ============================================ */
+/* TABELAS                                      */
+/* ============================================ */
+
+QTableWidget, QTableView {
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    gridline-color: #E2E8F0;
+}
+
+QTableWidget::item, QTableView::item {
+    padding: 6px 8px;
+}
+
+QHeaderView::section {
+    padding: 8px;
+    border: none;
+    border-right: 1px solid #CBD5E1;
+    border-bottom: 1px solid #CBD5E1;
+    font-weight: 600;
+}
+
+/* ============================================ */
+/* SCROLL BAR                                   */
+/* ============================================ */
+
+QScrollBar:vertical {
+    border: none;
+    width: 10px;
+    margin: 0;
+}
+
+QScrollBar::handle:vertical {
+    background-color: #CBD5E1;
+    border-radius: 5px;
+    min-height: 30px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background-color: #94A3B8;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0;
+}
+
+QScrollBar:horizontal {
+    border: none;
+    height: 10px;
+    margin: 0;
+}
+
+QScrollBar::handle:horizontal {
+    background-color: #CBD5E1;
+    border-radius: 5px;
+    min-width: 30px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background-color: #94A3B8;
+}
+
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    width: 0;
+}
+
+/* ============================================ */
+/* CHECK BOX                                    */
+/* ============================================ */
+
+QCheckBox {
+    spacing: 8px;
+}
+
+QCheckBox::indicator {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #CBD5E1;
+    border-radius: 4px;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #2563EB;
+    border-color: #2563EB;
+}
+
+QCheckBox::indicator:hover {
+    border-color: #94A3B8;
+}

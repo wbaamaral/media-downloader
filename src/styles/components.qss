@@ -1,0 +1,277 @@
+/* Component Styles - media-downloader */
+/* Estilos detalhados por componente */
+/* Cores de fundo/texto vem do QPalette - apenas bordas e acentos sao fixos */
+
+/* ============================================ */
+/* CONSISTENCIA DE ALTURAS                     */
+/* ============================================ */
+
+QLineEdit {
+    min-height: 29px;
+    max-height: 29px;
+}
+
+QPushButton {
+    min-height: 30px;
+    max-height: 30px;
+}
+
+QComboBox {
+    min-height: 29px;
+    max-height: 29px;
+}
+
+/* ============================================ */
+/* ESPACAMENTO ENTRE GRUPOS                    */
+/* ============================================ */
+
+QLabel {
+    margin-bottom: 2px;
+}
+
+QPushButton + QPushButton {
+    margin-left: 4px;
+}
+
+/* ============================================ */
+/* BOTOES - Variacoes de estilo                 */
+/* ============================================ */
+
+QPushButton#pbConfigureAddToPresetList,
+QPushButton#pbConfigureSetPresetDefaults,
+QPushButton#pbConfigureDownloadPath {
+    background-color: #2563EB;
+    color: #FFFFFF;
+    border: none;
+    font-weight: 600;
+}
+
+QPushButton#pbConfigureAddToPresetList:hover,
+QPushButton#pbConfigureSetPresetDefaults:hover,
+QPushButton#pbConfigureDownloadPath:hover {
+    background-color: #1D4ED8;
+}
+
+QPushButton#pbConfigureAddToPresetList:pressed,
+QPushButton#pbConfigureSetPresetDefaults:pressed,
+QPushButton#pbConfigureDownloadPath:pressed {
+    background-color: #1E40AF;
+}
+
+QPushButton#pbConfigureAddToPresetList:disabled,
+QPushButton#pbConfigureSetPresetDefaults:disabled,
+QPushButton#pbConfigureDownloadPath:disabled {
+    background-color: #94A3B8;
+    color: #E2E8F0;
+}
+
+/* ============================================ */
+/* INPUTS - Estados detalhados                 */
+/* ============================================ */
+
+QLineEdit:read-only {
+    color: #64748B;
+}
+
+/* ============================================ */
+/* COMBO BOX - Estados e dropdown              */
+/* ============================================ */
+
+QComboBox:focus {
+    border-color: #2563EB;
+}
+
+QComboBox::down-arrow {
+    image: none;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #64748B;
+    margin-right: 8px;
+}
+
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: center right;
+    width: 30px;
+    border-left: 1px solid #CBD5E1;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+    background-color: transparent;
+}
+
+QComboBox QAbstractItemView {
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    padding: 4px;
+    selection-background-color: #DBEAFE;
+    selection-color: #0F172A;
+}
+
+QComboBox QAbstractItemView::item {
+    min-height: 28px;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+/* ============================================ */
+/* TABELAS - Header e interacao                */
+/* ============================================ */
+
+QHeaderView::section:horizontal {
+    padding: 10px 8px;
+    font-size: 12px;
+}
+
+QHeaderView::section:horizontal:pressed {
+    border-color: #94A3B8;
+}
+
+QTableWidget, QTableView {
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    padding: 0;
+}
+
+/* ============================================ */
+/* TABS                                         */
+/* ============================================ */
+
+QTabBar::tab {
+    font-weight: 500;
+}
+
+QTabBar::tab:!selected {
+    margin-top: 2px;
+}
+
+/* ============================================ */
+/* PROGRESS BAR                                */
+/* ============================================ */
+
+QProgressBar {
+    border: none;
+    border-radius: 4px;
+    height: 8px;
+    text-align: center;
+}
+
+QProgressBar::chunk {
+    border-radius: 4px;
+    background-color: #2563EB;
+}
+
+/* ============================================ */
+/* GROUP BOX                                   */
+/* ============================================ */
+
+QGroupBox {
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    margin-top: 12px;
+    padding-top: 16px;
+    font-weight: 600;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    left: 12px;
+    padding: 0 6px;
+}
+
+/* ============================================ */
+/* RADIO BUTTON                                */
+/* ============================================ */
+
+QRadioButton {
+    spacing: 8px;
+}
+
+QRadioButton::indicator {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #CBD5E1;
+    border-radius: 9px;
+}
+
+QRadioButton::indicator:checked {
+    background-color: #2563EB;
+    border-color: #2563EB;
+    image: none;
+}
+
+QRadioButton::indicator:hover {
+    border-color: #94A3B8;
+}
+
+/* ============================================ */
+/* MENU                                        */
+/* ============================================ */
+
+QMenu {
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    padding: 4px;
+}
+
+QMenu::item {
+    padding: 8px 24px 8px 12px;
+    border-radius: 4px;
+}
+
+QMenu::separator {
+    height: 1px;
+    margin: 4px 8px;
+}
+
+/* ============================================ */
+/* STATUS BAR                                  */
+/* ============================================ */
+
+QStatusBar {
+    border-top: 1px solid #CBD5E1;
+    font-size: 12px;
+}
+
+/* ============================================ */
+/* FLAT BUTTONS                                */
+/* ============================================ */
+
+QPushButton:flat {
+    background-color: transparent;
+    border: none;
+    padding: 4px;
+}
+
+QPushButton:flat:hover {
+    border-radius: 4px;
+}
+
+/* ============================================ */
+/* OVERLAY LABELS (tabela)                     */
+/* ============================================ */
+
+QLabel#labelWidgetOverMainTable,
+QLabel#labelLibraryWidgetOverMainTable {
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+}
+
+/* ============================================ */
+/* SPIN BOX                                    */
+/* ============================================ */
+
+QSpinBox {
+    min-height: 28px;
+    padding: 4px 8px;
+    border: 1px solid #CBD5E1;
+    border-radius: 6px;
+}
+
+QSpinBox:focus {
+    border-color: #2563EB;
+}
+
+QSpinBox:hover {
+    border-color: #94A3B8;
+}

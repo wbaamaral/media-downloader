@@ -2775,7 +2775,7 @@ void engines::proxySettings::setDefaultProxy() const
 	QNetworkProxy::setApplicationProxy( m_networkProxy ) ;
 }
 
-QString engines::proxySettings::toString( const QNetworkProxy& e ) const
+QString engines::proxySettings::toString( const QNetworkProxy& e )
 {
 	if( e.type() == QNetworkProxy::NoProxy ){
 

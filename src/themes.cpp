@@ -20,6 +20,8 @@
 #include "themes.h"
 
 #include <QJsonDocument>
+#include <QFile>
+#include <QDir>
 
 #include "util.hpp"
 
@@ -172,14 +174,51 @@ void themes::setTheme( QApplication& app,const QJsonObject& obj ) const
 	}
 }
 
+void themes::applyStyles( QApplication& app ) const
+{
+	QString stylesDir = ":/styles" ;
+
+	if( QDir( stylesDir ).exists() ){
+
+		auto styleSheet = this->loadStyleSheet( stylesDir ) ;
+
+		if( !styleSheet.isEmpty() ){
+
+			app.setStyleSheet( styleSheet ) ;
+		}
+	}
+}
+
+QString themes::loadStyleSheet( const QString& stylesDir ) const
+{
+	QString styleSheet ;
+	QStringList styleFiles ;
+
+	styleFiles << "tokens.qss" << "base.qss" << "components.qss" ;
+
+	for( const auto& file : styleFiles ){
+
+		QString filePath = stylesDir + "/" + file ;
+		QFile f( filePath ) ;
+
+		if( f.open( QIODevice::ReadOnly | QIODevice::Text ) ){
+
+			styleSheet += QString::fromUtf8( f.readAll() ) + "\n" ;
+			f.close() ;
+		}
+	}
+
+	return styleSheet ;
+}
+
 themes::JObject themes::baseTheme() const
 {
 	JObject obj ;
 
-	obj.insert( "disabledColor",127,127,127,255 ) ;
-	obj.insert( "QPalette::Base",41,42,43,255 ) ;
-	obj.insert( "QPalette::Link",77,148,209,255 ) ;
-	obj.insert( "QPalette::Highlight",27,129,231,255 ) ;
+	obj.insert( "disabledColor",100,100,100,255 ) ;
+	obj.insert( "QPalette::Base",30,30,30,255 ) ;
+	obj.insert( "QPalette::Link",56,189,248,255 ) ;
+	obj.insert( "QPalette::Highlight",56,189,248,255 ) ;
 
 	obj.insert( "QPalette::WindowText","Qt::GlobalColor","Qt::lightGray" ) ;
 	obj.insert( "QPalette::Window","GlobalColor","darkColor" ) ;
@@ -191,11 +230,11 @@ themes::JObject themes::baseTheme() const
 	obj.insert( "QPalette::Button","GlobalColor","darkColor" ) ;
 	obj.insert( "QPalette::ButtonText","Qt::GlobalColor","Qt::lightGray" ) ;
 	obj.insert( "QPalette::Disabled,QPalette::ButtonText","GlobalColor","disabledColor" ) ;
-	obj.insert( "QPalette::BrightText","Qt::GlobalColor","Qt::yellow" ) ;
+	obj.insert( "QPalette::BrightText","Qt::GlobalColor","Qt::white" ) ;
 	obj.insert( "QPalette::HighlightedText","Qt::GlobalColor","Qt::black" ) ;
 	obj.insert( "QPalette::Disabled,QPalette::HighlightedText","GlobalColor","disabledColor" ) ;
 
-	obj.insert( "QToolTipStyleSheet","QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid white; }" ) ;
+	obj.insert( "QToolTipStyleSheet","QToolTip { color: #E2E8F0; background-color: #1E293B; border: 1px solid #334155; border-radius: 6px; padding: 6px 10px; }" ) ;
 
 	return obj ;
 }
@@ -204,7 +243,7 @@ QJsonObject themes::defaultDarkTheme() const
 {
 	auto obj = this->baseTheme() ;
 
-	obj.insert( "darkColor",45,45,45,255 ) ;
+	obj.insert( "darkColor",30,30,30,255 ) ;
 
 	return obj ;
 }
@@ -213,7 +252,7 @@ QJsonObject themes::defaultPureDarkTheme() const
 {
 	auto obj = this->baseTheme() ;
 
-	obj.insert( "darkColor",0,0,0,255 ) ;
+	obj.insert( "darkColor",15,15,15,255 ) ;
 
 	return obj ;
 }
@@ -222,12 +261,12 @@ QJsonObject themes::defaultLightTheme() const
 {
 	JObject obj ;
 
-	obj.insert( "disabledColor",127,127,127,255 ) ;
+	obj.insert( "disabledColor",180,180,180,255 ) ;
 	obj.insert( "QPalette::Base",255,255,255,255 ) ;
-	obj.insert( "QPalette::Link",77,148,209,255 ) ;
-	obj.insert( "QPalette::Highlight",27,129,231,255 ) ;
+	obj.insert( "QPalette::Link",37,99,235,255 ) ;
+	obj.insert( "QPalette::Highlight",37,99,235,255 ) ;
 
-	obj.insert( "darkColor",230,230,230,255 ) ;
+	obj.insert( "darkColor",241,245,249,255 ) ;
 
 	obj.insert( "QPalette::WindowText","Qt::GlobalColor","Qt::black" ) ;
 	obj.insert( "QPalette::Window","GlobalColor","darkColor" ) ;
@@ -239,11 +278,11 @@ QJsonObject themes::defaultLightTheme() const
 	obj.insert( "QPalette::Button","GlobalColor","darkColor" ) ;
 	obj.insert( "QPalette::ButtonText","Qt::GlobalColor","Qt::black" ) ;
 	obj.insert( "QPalette::Disabled,QPalette::ButtonText","GlobalColor","disabledColor" ) ;
-	obj.insert( "QPalette::BrightText","Qt::GlobalColor","Qt::yellow" ) ;
-	obj.insert( "QPalette::HighlightedText","Qt::GlobalColor","Qt::black" ) ;
+	obj.insert( "QPalette::BrightText","Qt::GlobalColor","Qt::red" ) ;
+	obj.insert( "QPalette::HighlightedText","Qt::GlobalColor","Qt::white" ) ;
 	obj.insert( "QPalette::Disabled,QPalette::HighlightedText","GlobalColor","disabledColor" ) ;
 
-	obj.insert( "QToolTipStyleSheet","QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid white; }" ) ;
+	obj.insert( "QToolTipStyleSheet","QToolTip { color: #0F172A; background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 6px; padding: 6px 10px; }" ) ;
 
 	return obj ;
 }

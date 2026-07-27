@@ -1822,7 +1822,7 @@ public:
 		void setApplicationProxy( const QString& ) const ;
 		void setDefaultProxy() const ;
 	private:
-		QString toString( const QNetworkProxy& ) const ;
+		static QString toString( const QNetworkProxy& ) ;
 		QString m_networkProxyString ;
 		mutable QString m_currentProxyString ;
 		QNetworkProxy m_networkProxy ;

@@ -2984,7 +2984,7 @@ bool utility::fileIsInvalidForGettingThumbnail( const QByteArray& e )
 	return e.endsWith( ".mp4" ) || e.endsWith( ".webm" ) || e.endsWith( ".avi" ) ;
 }
 
-utility::CPU::CPU() : m_cpu( this->getCPU() )
+utility::CPU::CPU() : m_cpu( utility::CPU::getCPU() )
 {
 }
 
@@ -3013,18 +3013,18 @@ bool utility::CPU::aarch32() const
 	return m_cpu == "arm" || m_cpu == "aarch32" ;
 }
 
-const QString& utility::CPU::getCPU() const
+const QString& utility::CPU::getCPU()
 {
 #if QT_VERSION >= QT_VERSION_CHECK( 5,4,0 )
 	static QString m = QSysInfo::currentCpuArchitecture() ;
 	return m ;
 #else
-	static QString m = this->getCPUNatively() ;
+	static QString m = utility::CPU::getCPUNatively() ;
 	return m ;
 #endif
 }
 
-QByteArray utility::CPU::getCPUNatively() const
+QByteArray utility::CPU::getCPUNatively()
 {
 	if( utility::platformIsLinux() ){
 

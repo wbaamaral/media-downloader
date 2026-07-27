@@ -1,0 +1,109 @@
+/* Design Tokens - media-downloader */
+/* Referencia de cores - valores usados em QPalette e QSS */
+
+/* ============================================ */
+/* CORES - Light Theme (padrao)                 */
+/* ============================================ */
+
+/* Cores primarias */
+/* color-primary: #2563EB */
+/* color-primary-hover: #1D4ED8 */
+/* color-primary-pressed: #1E40AF */
+
+/* Cores de acento */
+/* color-accent: #10B981 */
+/* color-accent-hover: #059669 */
+
+/* Cores de status */
+/* color-error: #EF4444 */
+/* color-warning: #F59E0B */
+/* color-success: #10B981 */
+
+/* Cores de fundo - Light */
+/* color-bg-primary: #FFFFFF */
+/* color-bg-secondary: #F1F5F9 */
+/* color-bg-tertiary: #E2E8F0 */
+
+/* Cores de texto - Light */
+/* color-text-primary: #0F172A */
+/* color-text-secondary: #64748B */
+/* color-text-muted: #94A3B8 */
+
+/* Cores de borda - Light */
+/* color-border: #CBD5E1 */
+/* color-border-hover: #94A3B8 */
+/* color-border-focus: #2563EB */
+
+/* ============================================ */
+/* CORES - Dark Theme                           */
+/* ============================================ */
+
+/* Cores de fundo - Dark */
+/* color-bg-primary-dark: #1E1E1E */
+/* color-bg-secondary-dark: #2D2D2D */
+/* color-bg-tertiary-dark: #3D3D3D */
+
+/* Cores de texto - Dark */
+/* color-text-primary-dark: #E2E8F0 */
+/* color-text-secondary-dark: #94A3B8 */
+/* color-text-muted-dark: #64748B */
+
+/* Cores de borda - Dark */
+/* color-border-dark: #404040 */
+/* color-border-hover-dark: #525252 */
+/* color-border-focus-dark: #38BDF8 */
+
+/* ============================================ */
+/* CORES - Pure Dark Theme                      */
+/* ============================================ */
+
+/* color-bg-primary-pure: #0F0F0F */
+/* color-bg-secondary-pure: #1A1A1A */
+
+/* ============================================ */
+/* ESPACAMENTO (Grid 8px)                       */
+/* ============================================ */
+
+/* space-xs: 4px */
+/* space-sm: 8px */
+/* space-md: 16px */
+/* space-lg: 24px */
+/* space-xl: 32px */
+/* space-2xl: 48px */
+
+/* ============================================ */
+/* BORDAS                                       */
+/* ============================================ */
+
+/* radius-sm: 4px */
+/* radius-md: 6px */
+/* radius-lg: 8px */
+/* radius-xl: 12px */
+
+/* ============================================ */
+/* TIPOGRAFIA                                   */
+/* ============================================ */
+
+/* font-family: "Segoe UI", "Noto Sans", sans-serif */
+/* font-size-xs: 11px */
+/* font-size-sm: 12px */
+/* font-size-base: 13px */
+/* font-size-md: 14px */
+/* font-size-lg: 16px */
+/* font-size-xl: 20px */
+
+/* ============================================ */
+/* SOMBRAS                                      */
+/* ============================================ */
+
+/* shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05) */
+/* shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1) */
+/* shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1) */
+
+/* ============================================ */
+/* TRANSICOES                                   */
+/* ============================================ */
+
+/* transition-fast: 150ms */
+/* transition-normal: 200ms */
+/* transition-slow: 300ms */

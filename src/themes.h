@@ -49,6 +49,8 @@ public:
 	QString themeFullPath() const ;
 	void setDefaultTheme( QApplication& app ) const ;
 	void setTheme( QApplication& app,const QJsonObject& obj ) const ;
+	void applyStyles( QApplication& app ) const ;
+	QString loadStyleSheet( const QString& stylesDir ) const ;
 	QJsonObject defaultDarkTheme() const ;
 	QJsonObject defaultLightTheme() const ;
 	QJsonObject defaultPureDarkTheme() const ;

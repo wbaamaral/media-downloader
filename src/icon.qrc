@@ -23,5 +23,8 @@
 		<file>icons/white/cookie.png</file>
 		<file>icons/white/clearFile.png</file>
 		<file>icons/white/extensions.png</file>
+		<file>styles/tokens.qss</file>
+		<file>styles/base.qss</file>
+		<file>styles/components.qss</file>
 		</qresource>
  </RCC>

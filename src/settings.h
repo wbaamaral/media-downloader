@@ -260,7 +260,6 @@ public:
 	bool useInternalArchiveFile() ;
 	bool enableLibraryTab() ;
 	bool printMediaPlayers() ;
-	bool checkForEnginesUpdates() ;
 	bool autoHideDownloadWhenCompleted() ;
 	bool deleteFilesOnCanceledDownload() ;
 	bool autoSetDefaultEngineAndOptions() ;
@@ -296,7 +295,6 @@ public:
 	void setLibraryArrangeAscending( bool ) ;
 	void setLibraryArrangeByDate( bool ) ;
 	void setAutoHideDownloadWhenCompleted( bool ) ;
-	void setCheckForUpdates( bool ) ;
 	void setDesktopNotifyOnDownloadComplete( bool ) ;
 	void setDesktopNotifyOnAllDownloadComplete( bool ) ;
 	void setUseInternalArchiveFile( bool ) ;
@@ -308,7 +306,6 @@ public:
 	void addOptionsHistory( const QString& engineName,const QString&,settings::tabName ) ;
 	void setshowTrayIcon( bool ) ;
 	void setTheme( QApplication&,const QString& ) ;
-	void setUseSystemProvidedVersionIfAvailable( bool ) ;
 	void setMaxConcurrentDownloads( int ) ;
 	void setTabNumber( int ) ;
 	void saveMainWindowDimensions( const QRect& ) ;

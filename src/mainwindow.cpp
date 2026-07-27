@@ -28,6 +28,9 @@
 
 #include <csignal>
 
+#include <QScreen>
+#include <QGuiApplication>
+
 MainWindow::MainWindow( QApplication& app,
 			settings& s,
 			translator& t,
@@ -53,6 +56,16 @@ MainWindow::MainWindow( QApplication& app,
 	qRegisterMetaType< reportFinished >() ;
 
 	m_settings.setMainWindowDimensions( this->window() ) ;
+
+	if( this->window()->pos() == QPoint( 0,0 ) ){
+
+		auto screen = QGuiApplication::primaryScreen()->availableGeometry() ;
+
+		int x = ( screen.width() - this->window()->width() ) / 2 ;
+		int y = ( screen.height() - this->window()->height() ) / 2 ;
+
+		this->window()->move( x,y ) ;
+	}
 
 	this->window()->setWindowIcon( m_trayIcon.icon() ) ;
 

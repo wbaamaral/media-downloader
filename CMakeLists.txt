@@ -266,7 +266,11 @@ SetupIconFile={#MySourcesPath}\\src\\media-downloader.ico
 Compression=lzma
 SolidCompression=yes
 DisableProgramGroupPage=yes
+ChangesEnvironment=yes
 OutputBaseFilename=${OutputBaseFilename}
+
+[Registry]
+Root: HKCU; Subkey: \"Environment\"; ValueType: expandsz; ValueName: \"Path\"; ValueData: \"{olddata};{app}\"; Flags: uninsdeletevalue
 
 [InstallDelete]
 Type: filesandordirs; Name: \"{app}\\3rdParty\"
@@ -275,6 +279,7 @@ Type: filesandordirs; Name: \"{app}\\translations\"
 [Tasks]
 Name: \"desktopicon\"; Description: \"{cm:CreateDesktopIcon}\"; GroupDescription: \"{cm:AdditionalIcons}\"; Flags: unchecked
 Name: \"quicklaunchicon\"; Description: \"{cm:CreateQuickLaunchIcon}\"; GroupDescription: \"{cm:AdditionalIcons}\"; Flags: unchecked; OnlyBelowVersion: 0,6.1
+Name: \"addtopath\"; Description: \"Adicionar ao PATH do sistema (para bsdtar, yt-dlp)\"; GroupDescription: \"Opções adicionais:\"; Flags: checked
 
 [Files]
 Source: {#MyEXELocation}; DestDir: {app}; Flags: ignoreversion
@@ -368,7 +373,11 @@ SetupIconFile={#MySourcesPath}\\src\\media-downloader.ico
 Compression=lzma
 SolidCompression=yes
 DisableProgramGroupPage=yes
+ChangesEnvironment=yes
 OutputBaseFilename=${OutputBaseFilename}
+
+[Registry]
+Root: HKCU; Subkey: \"Environment\"; ValueType: expandsz; ValueName: \"Path\"; ValueData: \"{olddata};{app}\"; Flags: uninsdeletevalue
 
 [InstallDelete]
 Type: filesandordirs; Name: \"{app}\\3rdParty\"

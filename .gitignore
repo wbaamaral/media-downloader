@@ -56,6 +56,9 @@ qrc_*.cpp
 # macOS
 .DS_Store
 
+# Windows build deps
+openssl/
+
 # Windows
 *.exe
 

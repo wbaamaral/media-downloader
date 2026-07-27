@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 # ==============================================================================
 # Nome:        build_windows.ps1
 # Descrição:   Build unificado + empacotamento (zip/Inno Setup) para Windows
@@ -78,16 +78,38 @@ function Invoke-Ext {
     Write-Log "EXEC: $FilePath $($Arguments -join ' ')"
 
     try {
-        $out = & $FilePath @Arguments 2>&1 | Out-String
-        $exitCode = $LASTEXITCODE
+        $pinfo = New-Object System.Diagnostics.ProcessStartInfo
+        $pinfo.FileName = $FilePath
+        # Quote arguments that contain spaces
+        $quotedArgs = $Arguments | ForEach-Object {
+            if ($_ -match '\s') { "`"$_`"" } else { $_ }
+        }
+        $pinfo.Arguments = $quotedArgs -join ' '
+        $pinfo.RedirectStandardOutput = $true
+        $pinfo.RedirectStandardError = $true
+        $pinfo.UseShellExecute = $false
+        $pinfo.CreateNoWindow = $true
+
+        $proc = [System.Diagnostics.Process]::Start($pinfo)
+
+        $stdoutTask = $proc.StandardOutput.ReadToEndAsync()
+        $stderrTask = $proc.StandardError.ReadToEndAsync()
+        $proc.WaitForExit()
+        $stdout = $stdoutTask.Result
+        $stderr = $stderrTask.Result
+        $exitCode = $proc.ExitCode
+
+        if ($stderr) {
+            Write-Log "Stderr: $stderr"
+        }
         if ($exitCode -ne 0) {
             Write-Fail "Falhou (exit $exitCode): $FilePath"
-            Write-Log "FALHA (exit $exitCode): $out"
+            Write-Log "FALHA (exit $exitCode): $stdout"
         }
-        return [PSCustomObject]@{ ExitCode = $exitCode; Output = $out.Trim() }
+        return [PSCustomObject]@{ ExitCode = $exitCode; Output = $stdout.Trim() }
     } catch {
-        Write-Fail "Exceção: $($_.Exception.Message)"
-        Write-Log "EXCEÇÃO: $($_.Exception.Message)"
+        Write-Fail "Excecao: $($_.Exception.Message)"
+        Write-Log "EXCECAO: $($_.Exception.Message)"
         return [PSCustomObject]@{ ExitCode = 1; Output = $_.Exception.Message }
     }
 }
@@ -96,7 +118,7 @@ function Assert-Tool {
     param([string]$Name, [string]$Description)
     $cmd = Get-Command $Name -ErrorAction SilentlyContinue
     if ($cmd) {
-        Write-Ok "$Description: $($cmd.Source)"
+        Write-Ok "${Description}: $($cmd.Source)"
         return $true
     } else {
         Write-Fail "$Description NÃO encontrado ($Name)"
@@ -111,7 +133,6 @@ function Find-Qt {
         [string]$TargetArch = "x64"
     )
 
-    # Caminhos de busca
     $searchPaths = @(
         "C:\Qt",
         "$env:USERPROFILE\Qt",
@@ -120,61 +141,47 @@ function Find-Qt {
         "C:\Program Files (x86)\Qt"
     )
 
-    $found = @()
+    $results = New-Object System.Collections.ArrayList
 
     foreach ($base in $searchPaths) {
         if (-not (Test-Path $base)) { continue }
 
-        # Buscar versões: 5.15.2, 6.5.3, etc.
-        $versions = Get-ChildItem -Path $base -Directory -ErrorAction SilentlyContinue |
-            Where-Object { $_.Name -match '^[56]\.\d+\.\d+$' }
+        $versions = @(Get-ChildItem -Path $base -Directory -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -match '^[56]\.\d+\.\d+$' })
 
         foreach ($v in $versions) {
             $major = $v.Name.Split('.')[0]
-
-            # Filtrar por versão solicitada
             if ($Version -ne "auto" -and $major -ne $Version) { continue }
 
-            # Procurar subpastas com toolchain
-            $subDirs = Get-ChildItem -Path $v.FullName -Directory -ErrorAction SilentlyContinue
+            $subDirs = @(Get-ChildItem -Path $v.FullName -Directory -ErrorAction SilentlyContinue)
 
             foreach ($sub in $subDirs) {
                 $subName = $sub.Name.ToLower()
+                $isX64 = $subName.Contains('64') -and (-not $subName.Contains('32'))
+                $isX86 = $subName.Contains('32') -or $subName.Contains('86')
+                $isMinGW = $subName.Contains('mingw')
+                $isMSVC = $subName.Contains('msvc')
 
-                # x64: mingw*_64 ou msvc*_64
-                # x86: mingw*_32 ou msvc*_86
-                if ($TargetArch -eq "x64") {
-                    if ($subName -match '(mingw\d+_\d+|msvc\d+_\d+).*64') {
-                        $found += [PSCustomObject]@{
-                            Path      = $sub.FullName
-                            Version   = $v.Name
-                            Compiler  = if ($subName -match 'mingw') { 'MinGW' } else { 'MSVC' }
-                            Arch      = 'x64'
-                        }
-                    }
-                } else {
-                    if ($subName -match '(mingw\d+_\d+|msvc\d+_\d+).*(32|86)') {
-                        $found += [PSCustomObject]@{
-                            Path      = $sub.FullName
-                            Version   = $v.Name
-                            Compiler  = if ($subName -match 'mingw') { 'MinGW' } else { 'MSVC' }
-                            Arch      = 'x86'
-                        }
+                if (($TargetArch -eq "x64" -and $isX64) -or ($TargetArch -eq "x86" -and $isX86)) {
+                    if ($isMinGW -or $isMSVC) {
+                        $compiler = if ($isMinGW) { 'MinGW' } else { 'MSVC' }
+                        $results.Add([PSCustomObject]@{
+                            Path     = $sub.FullName
+                            Version  = $v.Name
+                            Compiler = $compiler
+                            Arch     = $TargetArch
+                        }) | Out-Null
                     }
                 }
             }
         }
     }
 
-    # Prioridade: Qt6 > Qt5, MinGW > MSVC
-    $sorted = $found | Sort-Object -Property @{
-        Expression = { $_.Version.Split('.')[0] }; Ascending = $false
-    }, @{
-        Expression = { if ($_.Compiler -eq 'MinGW') { 0 } else { 1 } }; Ascending = $true
-    }
-
-    if ($sorted.Count -gt 0) {
-        return $sorted[0]
+    if ($results.Count -gt 0) {
+        # Qt6 > Qt5, MinGW > MSVC
+        $sorted = $results | Sort-Object @{Expression={$_.Version.Split('.')[0]}; Ascending=$false},
+                                          @{Expression={if($_.Compiler -eq 'MinGW'){0}else{1}}; Ascending=$true}
+        return @($sorted)[0]
     }
     return $null
 }
@@ -375,7 +382,9 @@ $cmakeArgs = @(
     "-DCMAKE_VERBOSE_MAKEFILE=FALSE"
     "-DCMAKE_BUILD_TYPE:STRING=Release"
     "-DCMAKE_PREFIX_PATH=$($qtInfo.Path)"
-    "-G", "CodeBlocks - MinGW Makefiles"
+    "-DCMAKE_C_COMPILER=$mingwPath\bin\gcc.exe"
+    "-DCMAKE_CXX_COMPILER=$mingwPath\bin\g++.exe"
+    "-G", "MinGW Makefiles"
     "-S", $SrcDir
     "-B", $cmakeBuildDir
 )
@@ -401,7 +410,9 @@ $cmakeArgs2 = @(
     "-DLIBRARIES_LOCATION=$BuildDir\$portableDir"
     "-DOUTPUT_PATH=$BuildDir"
     "-DSOURCE_PATH=$SrcDir"
-    "-G", "CodeBlocks - MinGW Makefiles"
+    "-DCMAKE_C_COMPILER=$mingwPath\bin\gcc.exe"
+    "-DCMAKE_CXX_COMPILER=$mingwPath\bin\g++.exe"
+    "-G", "MinGW Makefiles"
     "-S", $SrcDir
     "-B", $cmakeBuildDir
 )
@@ -483,7 +494,89 @@ if ($Package) {
         Write-Warn "windeployqt não encontrado — DLLs do Qt não foram coletadas"
     }
 
-    # 8d. Zip (7-Zip)
+    # 8d. OpenSSL DLLs (Qt 5.15 precisa de OpenSSL 1.1.x para TLS)
+    $sslDlls = @("libssl-1_1-x64.dll", "libcrypto-1_1-x64.dll")
+    $needSsl = $false
+    foreach ($dll in $sslDlls) {
+        if (-not (Test-Path (Join-Path $portablePath $dll))) {
+            $needSsl = $true
+            break
+        }
+    }
+    if ($needSsl) {
+        Write-Info "Procurando OpenSSL 1.1.x DLLs..."
+        $sslSources = @(
+            "C:\Program Files\OpenSSL-Win64"
+            "C:\Program Files\OpenSSL"
+            "C:\Program Files (x86)\OpenSSL-Win64"
+            "C:\Program Files (x86)\OpenSSL"
+            "$SrcDir\openssl"
+        )
+        $sslCopied = $false
+        foreach ($srcDir in $sslSources) {
+            if (-not (Test-Path $srcDir)) { continue }
+            $allFound = $true
+            foreach ($dll in $sslDlls) {
+                if (-not (Test-Path (Join-Path $srcDir $dll))) {
+                    $allFound = $false
+                    break
+                }
+            }
+            if ($allFound) {
+                foreach ($dll in $sslDlls) {
+                    $srcFile = Join-Path $srcDir $dll
+                    Copy-Item -Path $srcFile -Destination $portablePath
+                    Write-Ok "OpenSSL: $dll (de $srcDir)"
+                }
+                $sslCopied = $true
+                break
+            }
+        }
+        if (-not $sslCopied) {
+            Write-Warn "OpenSSL 1.1.x DLLs não encontradas — TLS pode não funcionar"
+            Write-Warn "Copie manualmente libssl-1_1-x64.dll e libcrypto-1_1-x64.dll para o diretorio de instalação"
+        }
+    } else {
+        Write-Ok "OpenSSL DLLs já presentes"
+    }
+
+    # 8e. bsdtar (necessário para extrair zips: auto-update, deno, etc.)
+    $bsdtarDst = Join-Path $portablePath "bsdtar.exe"
+    if (-not (Test-Path $bsdtarDst)) {
+        $bsdtarSources = @(
+            "C:\Windows\System32\tar.exe"
+            "C:\Program Files\Git\usr\bin\bsdtar.exe"
+            "C:\Program Files (x86)\Git\usr\bin\bsdtar.exe"
+        )
+        $bsdtarCopied = $false
+        foreach ($src in $bsdtarSources) {
+            if (Test-Path $src) {
+                Copy-Item -Path $src -Destination $bsdtarDst
+                Write-Ok "bsdtar: copiado de $src"
+                $bsdtarCopied = $true
+                break
+            }
+        }
+        if (-not $bsdtarCopied) {
+            Write-Warn "bsdtar não encontrado — auto-update pode não funcionar"
+        }
+    } else {
+        Write-Ok "bsdtar já presente"
+    }
+
+    # 8e-2. Launcher batch (adiciona dir ao PATH para bsdtar/yt-dlp)
+    $launcherBat = Join-Path $portablePath "media-downloader.bat"
+    $launcherLines = @(
+        "@echo off"
+        "set PATH=%~dp0;%PATH%"
+        "start `"`" `%~dp0media-downloader.exe`""
+    )
+    if (-not $DryRun) {
+        $launcherLines | Out-File -FilePath $launcherBat -Encoding ASCII
+        Write-Ok "Launcher: media-downloader.bat"
+    }
+
+    # 8f. Zip (7-Zip)
     if ($sevenZipPath) {
         $zipName = "media-downloader-$VERSION-win-$Arch.zip"
         $zipPath = Join-Path $DistDir $zipName
@@ -505,12 +598,21 @@ if ($Package) {
         }
     }
 
-    # 8e. Inno Setup (instalador)
+    # 8g. Inno Setup (instalador)
     if ($innoPath) {
         $issFile = Join-Path $cmakeBuildDir "media-downloader_windows_installer_Qt$($qtInfo.Version.Split('.')[0]).iss"
         if (Test-Path $issFile) {
+            # Criar pasta 3rdParty com placeholder (dependências opcionais)
+            $thirdPartyDir = Join-Path $portablePath "3rdParty"
+            if (-not (Test-Path $thirdPartyDir)) {
+                New-Item -ItemType Directory -Path $thirdPartyDir -Force | Out-Null
+            }
+            $placeholder = Join-Path $thirdPartyDir ".placeholder"
+            if (-not (Test-Path $placeholder)) {
+                Set-Content -Path $placeholder -Value "# Optional third-party tools (yt-dlp, gallery-dl, wget, etc.)" -Encoding UTF8
+            }
             $isccExe = Join-Path $innoPath "iscc.exe"
-            $result = Invoke-Ext -FilePath $isccExe -Arguments @("/O" + $DistDir, $issFile)
+            $result = Invoke-Ext -FilePath $isccExe -Arguments @("/O`"$DistDir`"", $issFile)
             if ($result.ExitCode -eq 0) {
                 Write-Ok "Instalador Inno Setup gerado"
             } else {

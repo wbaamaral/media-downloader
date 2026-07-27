@@ -580,6 +580,18 @@ QString engines::findExecutable( const QString& exeName,bool searchFromBeginning
 			m = this->findExecutable( exeName + ".exe",paths,searchFromBeginning ) ;
 		}
 
+		if( m.isEmpty() ){
+
+			auto appDir = utility::windowsApplicationDirPath() ;
+
+			m = this->findExecutable( exeName,QStringList( appDir ),false ) ;
+
+			if( m.isEmpty() && !exeName.endsWith( ".exe" ) ){
+
+				m = this->findExecutable( exeName + ".exe",QStringList( appDir ),false ) ;
+			}
+		}
+
 		return m ;
 	}else{
 		auto paths = this->processEnvironment().value( "PATH" ).split( ':' ) ;

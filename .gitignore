@@ -1,14 +1,67 @@
 CMakeLists.txt.*
 
-#for vim editor
+# vim editor
 *.swp
+*~
 
-#for clangd with YCM on vim
+# clangd / YCM
 .cache/
 compile_commands.json
 
-#for build dir
+# build dir
 build/
+out/
 
-#for ${default} where youtube-dl keeps getting downloaded to.
+# spec repo (separate repo, not part of mediadw)
+spec/
+
+# agent persistent memory (never commit)
+.memory/
+
+# youtube-dl default download dir
 ${default}/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+locale_path.h
+version.h
+VERSION_INFO
+*.iss
+
+# Object files and libraries
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+
+# Qt generated (in-source build)
+moc_*
+ui_*.h
+qrc_*.cpp
+
+# IDE / editor
+.vscode/
+.idea/
+*.pro.user
+*.pro.user.*
+
+# macOS
+.DS_Store
+
+# Windows
+*.exe
+
+# temp / backup
+*.tmp
+*.bak
+*.log
+
+# Flatpak build artifacts
+.flatpak-builder/
+repo/

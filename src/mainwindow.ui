@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>823</width>
-    <height>534</height>
+    <width>1080</width>
+    <height>1080</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>1080</width>
+    <height>1080</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string/>
@@ -17,14 +23,14 @@
    <widget class="QTabWidget" name="tabWidget">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>10</y>
-      <width>801</width>
-      <height>521</height>
+      <x>0</x>
+      <y>0</y>
+      <width>981</width>
+      <height>651</height>
      </rect>
     </property>
     <property name="currentIndex">
-     <number>4</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="tabBasickDownloader">
      <attribute name="title">
@@ -44,7 +50,7 @@
       <property name="geometry">
        <rect>
         <x>60</x>
-        <y>450</y>
+        <y>470</y>
         <width>121</width>
         <height>33</height>
        </rect>
@@ -57,7 +63,7 @@
       <property name="geometry">
        <rect>
         <x>300</x>
-        <y>450</y>
+        <y>470</y>
         <width>201</width>
         <height>33</height>
        </rect>
@@ -79,7 +85,7 @@
        <string>Enter URL:</string>
       </property>
       <property name="alignment">
-       <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
       <property name="wordWrap">
        <bool>true</bool>
@@ -98,7 +104,7 @@
        <string>Download Options:</string>
       </property>
       <property name="alignment">
-       <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
       <property name="wordWrap">
        <bool>true</bool>
@@ -108,7 +114,7 @@
       <property name="geometry">
        <rect>
         <x>180</x>
-        <y>450</y>
+        <y>470</y>
         <width>121</width>
         <height>33</height>
        </rect>
@@ -141,7 +147,7 @@
       <property name="geometry">
        <rect>
         <x>500</x>
-        <y>450</y>
+        <y>470</y>
         <width>121</width>
         <height>33</height>
        </rect>
@@ -154,7 +160,7 @@
       <property name="geometry">
        <rect>
         <x>620</x>
-        <y>450</y>
+        <y>470</y>
         <width>121</width>
         <height>33</height>
        </rect>
@@ -186,7 +192,7 @@
        </rect>
       </property>
       <property name="editTriggers">
-       <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+       <set>QAbstractItemView::NoEditTriggers</set>
       </property>
       <property name="tabKeyNavigation">
        <bool>false</bool>
@@ -195,7 +201,7 @@
        <bool>false</bool>
       </property>
       <property name="selectionBehavior">
-       <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+       <enum>QAbstractItemView::SelectRows</enum>
       </property>
       <column>
        <property name="text">
@@ -236,7 +242,7 @@
        <string>Engine Name:</string>
       </property>
       <property name="alignment">
-       <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
       <property name="wordWrap">
        <bool>true</bool>
@@ -324,7 +330,7 @@
        <string>Engine Name:</string>
       </property>
       <property name="alignment">
-       <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
       <property name="wordWrap">
        <bool>true</bool>
@@ -343,7 +349,7 @@
        <string>Download Options:</string>
       </property>
       <property name="alignment">
-       <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
       <property name="wordWrap">
        <bool>true</bool>
@@ -359,10 +365,10 @@
        </rect>
       </property>
       <property name="editTriggers">
-       <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+       <set>QAbstractItemView::NoEditTriggers</set>
       </property>
       <property name="selectionMode">
-       <enum>QAbstractItemView::SelectionMode::NoSelection</enum>
+       <enum>QAbstractItemView::NoSelection</enum>
       </property>
       <property name="showGrid">
        <bool>false</bool>
@@ -407,7 +413,7 @@
        <string>Enter URL:</string>
       </property>
       <property name="alignment">
-       <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
       <property name="wordWrap">
        <bool>true</bool>
@@ -578,10 +584,10 @@
        <bool>true</bool>
       </property>
       <property name="frameShape">
-       <enum>QFrame::Shape::StyledPanel</enum>
+       <enum>QFrame::StyledPanel</enum>
       </property>
       <property name="frameShadow">
-       <enum>QFrame::Shadow::Raised</enum>
+       <enum>QFrame::Raised</enum>
       </property>
       <widget class="QTableWidget" name="TableWidgetBatchDownloaderList">
        <property name="geometry">
@@ -593,7 +599,7 @@
         </rect>
        </property>
        <property name="editTriggers">
-        <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+        <set>QAbstractItemView::NoEditTriggers</set>
        </property>
        <property name="tabKeyNavigation">
         <bool>false</bool>
@@ -602,7 +608,7 @@
         <bool>false</bool>
        </property>
        <property name="selectionBehavior">
-        <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+        <enum>QAbstractItemView::SelectRows</enum>
        </property>
        <attribute name="verticalHeaderMinimumSectionSize">
         <number>72</number>
@@ -666,10 +672,10 @@
      <widget class="QLabel" name="labelWidgetOverMainTable">
       <property name="geometry">
        <rect>
-        <x>100</x>
+        <x>20</x>
         <y>56</y>
-        <width>591</width>
-        <height>221</height>
+        <width>741</width>
+        <height>351</height>
        </rect>
       </property>
       <property name="autoFillBackground">
@@ -712,7 +718,7 @@
        <string>Time Interval Start Time(HH:MM:SS):</string>
       </property>
       <property name="alignment">
-       <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
       <property name="wordWrap">
        <bool>true</bool>
@@ -721,8 +727,8 @@
      <widget class="QPushButton" name="pbSetTimeIntervals">
       <property name="geometry">
        <rect>
-        <x>400</x>
-        <y>232</y>
+        <x>410</x>
+        <y>360</y>
         <width>131</width>
         <height>31</height>
        </rect>
@@ -744,7 +750,7 @@
        <string>Time Interval End Time(HH:MM:SS):</string>
       </property>
       <property name="alignment">
-       <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
       <property name="wordWrap">
        <bool>true</bool>
@@ -754,7 +760,7 @@
       <property name="geometry">
        <rect>
         <x>260</x>
-        <y>232</y>
+        <y>360</y>
         <width>131</width>
         <height>31</height>
        </rect>
@@ -786,7 +792,7 @@
        <string>Chapters(Comma Separated):</string>
       </property>
       <property name="alignment">
-       <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
       <property name="wordWrap">
        <bool>true</bool>
@@ -818,16 +824,16 @@
        <string>Rename File To Below Text</string>
       </property>
       <property name="alignment">
-       <set>Qt::AlignmentFlag::AlignCenter</set>
+       <set>Qt::AlignCenter</set>
       </property>
      </widget>
      <widget class="QPlainTextEdit" name="plainTextEditBD">
       <property name="geometry">
        <rect>
-        <x>110</x>
-        <y>160</y>
-        <width>571</width>
-        <height>61</height>
+        <x>80</x>
+        <y>240</y>
+        <width>661</width>
+        <height>111</height>
        </rect>
       </property>
       <property name="placeholderText">
@@ -878,7 +884,7 @@
        <string>Get List Options:</string>
       </property>
       <property name="alignment">
-       <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
       <property name="wordWrap">
        <bool>true</bool>
@@ -920,7 +926,7 @@
        <string>Download Options:</string>
       </property>
       <property name="alignment">
-       <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
       <property name="wordWrap">
        <bool>true</bool>
@@ -962,7 +968,7 @@
        <string>Enter Playlist URL:</string>
       </property>
       <property name="alignment">
-       <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
       <property name="wordWrap">
        <bool>true</bool>
@@ -1062,7 +1068,7 @@
        <string>Engine Name:</string>
       </property>
       <property name="alignment">
-       <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
       <property name="wordWrap">
        <bool>true</bool>
@@ -1205,7 +1211,7 @@
         <string>Ui Name</string>
        </property>
        <property name="alignment">
-        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
        <property name="wordWrap">
         <bool>true</bool>
@@ -1241,7 +1247,7 @@
         </rect>
        </property>
        <property name="editTriggers">
-        <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+        <set>QAbstractItemView::NoEditTriggers</set>
        </property>
        <property name="tabKeyNavigation">
         <bool>false</bool>
@@ -1250,13 +1256,13 @@
         <bool>false</bool>
        </property>
        <property name="selectionMode">
-        <enum>QAbstractItemView::SelectionMode::NoSelection</enum>
+        <enum>QAbstractItemView::NoSelection</enum>
        </property>
        <property name="selectionBehavior">
-        <enum>QAbstractItemView::SelectionBehavior::SelectItems</enum>
+        <enum>QAbstractItemView::SelectItems</enum>
        </property>
        <property name="gridStyle">
-        <enum>Qt::PenStyle::SolidLine</enum>
+        <enum>Qt::SolidLine</enum>
        </property>
        <attribute name="verticalHeaderDefaultSectionSize">
         <number>30</number>
@@ -1301,7 +1307,7 @@
         <string>Url</string>
        </property>
        <property name="alignment">
-        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
        <property name="wordWrap">
         <bool>true</bool>
@@ -1346,7 +1352,7 @@
         <string>Get List Options:</string>
        </property>
        <property name="alignment">
-        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
        <property name="wordWrap">
         <bool>true</bool>
@@ -1368,7 +1374,7 @@
        </rect>
       </property>
       <property name="editTriggers">
-       <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+       <set>QAbstractItemView::NoEditTriggers</set>
       </property>
       <property name="tabKeyNavigation">
        <bool>false</bool>
@@ -1377,13 +1383,13 @@
        <bool>false</bool>
       </property>
       <property name="selectionMode">
-       <enum>QAbstractItemView::SelectionMode::NoSelection</enum>
+       <enum>QAbstractItemView::NoSelection</enum>
       </property>
       <property name="selectionBehavior">
-       <enum>QAbstractItemView::SelectionBehavior::SelectItems</enum>
+       <enum>QAbstractItemView::SelectItems</enum>
       </property>
       <property name="gridStyle">
-       <enum>Qt::PenStyle::SolidLine</enum>
+       <enum>Qt::SolidLine</enum>
       </property>
       <column>
        <property name="text">
@@ -1542,7 +1548,7 @@
        <string>Rename File To Below Text</string>
       </property>
       <property name="alignment">
-       <set>Qt::AlignmentFlag::AlignCenter</set>
+       <set>Qt::AlignCenter</set>
       </property>
      </widget>
     </widget>
@@ -1555,12 +1561,12 @@
        <rect>
         <x>10</x>
         <y>0</y>
-        <width>771</width>
-        <height>441</height>
+        <width>921</width>
+        <height>551</height>
        </rect>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tabWidgetConfigureGeneralOptions">
        <attribute name="title">
@@ -1605,7 +1611,7 @@
          <string>Select Language</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -1634,7 +1640,7 @@
          <string>Download Path</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -1657,7 +1663,7 @@
         <property name="geometry">
          <rect>
           <x>188</x>
-          <y>370</y>
+          <y>420</y>
           <width>421</width>
           <height>31</height>
          </rect>
@@ -1667,7 +1673,7 @@
         <property name="geometry">
          <rect>
           <x>10</x>
-          <y>360</y>
+          <y>410</y>
           <width>171</width>
           <height>51</height>
          </rect>
@@ -1676,7 +1682,7 @@
          <string>Maximum Concurrent Downloads</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -1705,7 +1711,7 @@
          <string>Theme(Need A Restart)</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -1770,7 +1776,7 @@
         <property name="geometry">
          <rect>
           <x>188</x>
-          <y>330</y>
+          <y>380</y>
           <width>421</width>
           <height>32</height>
          </rect>
@@ -1800,7 +1806,7 @@
         <property name="geometry">
          <rect>
           <x>10</x>
-          <y>330</y>
+          <y>380</y>
           <width>171</width>
           <height>31</height>
          </rect>
@@ -1809,7 +1815,7 @@
          <string>Actions At Startup</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -1927,7 +1933,7 @@
          <string>Engine's Name</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -1959,7 +1965,7 @@
          <string>Name Of Web Browser To Get Cookies From</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -2031,7 +2037,7 @@
          <string>Options To Add</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -2112,7 +2118,7 @@
          <string>Text Encoding</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -2191,7 +2197,7 @@
          </rect>
         </property>
         <property name="editTriggers">
-         <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+         <set>QAbstractItemView::NoEditTriggers</set>
         </property>
         <property name="tabKeyNavigation">
          <bool>false</bool>
@@ -2200,13 +2206,13 @@
          <bool>false</bool>
         </property>
         <property name="selectionMode">
-         <enum>QAbstractItemView::SelectionMode::NoSelection</enum>
+         <enum>QAbstractItemView::NoSelection</enum>
         </property>
         <property name="selectionBehavior">
-         <enum>QAbstractItemView::SelectionBehavior::SelectItems</enum>
+         <enum>QAbstractItemView::SelectItems</enum>
         </property>
         <property name="gridStyle">
-         <enum>Qt::PenStyle::SolidLine</enum>
+         <enum>Qt::SolidLine</enum>
         </property>
         <column>
          <property name="text">
@@ -2257,7 +2263,7 @@
          <string>Ui Name</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
        </widget>
        <widget class="QLabel" name="labelConfigureOptionsPresetOptiions">
@@ -2273,7 +2279,7 @@
          <string>Options</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
        </widget>
        <widget class="QPushButton" name="pbConfigureAddToPresetList">
@@ -2315,7 +2321,7 @@
          <string>Website</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
        </widget>
        <widget class="QLabel" name="labelBaseConfirmResetPreset">
@@ -2347,7 +2353,7 @@
          <string>Are You Sure You Want To Reset These Options To Their Defaults?</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignCenter</set>
+         <set>Qt::AlignCenter</set>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -2493,7 +2499,7 @@
          <string>Set What Url Should Be Managed By What Engine</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignCenter</set>
+         <set>Qt::AlignCenter</set>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -2512,7 +2518,7 @@
          <string>Url Filter</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -2531,7 +2537,7 @@
          <string>Options</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -2593,7 +2599,7 @@
          <string>Engine's Name</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -2655,7 +2661,7 @@ Example 1: 192.168.93.89:8080
 Exampe 2: ${gateway}:8080</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignCenter</set>
+         <set>Qt::AlignCenter</set>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -2710,7 +2716,7 @@ Exampe 2: ${gateway}:8080</string>
          <string>A Restart Is Required After Every Change</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignCenter</set>
+         <set>Qt::AlignCenter</set>
         </property>
        </widget>
        <widget class="QLabel" name="labelUIScaleCurrentValue">
@@ -2731,7 +2737,7 @@ Exampe 2: ${gateway}:8080</string>
          <string notr="true">Current Scale Value: NA</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignCenter</set>
+         <set>Qt::AlignCenter</set>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -2782,7 +2788,7 @@ Exampe 2: ${gateway}:8080</string>
       <property name="geometry">
        <rect>
         <x>390</x>
-        <y>446</y>
+        <y>570</y>
         <width>221</width>
         <height>33</height>
        </rect>
@@ -2795,7 +2801,7 @@ Exampe 2: ${gateway}:8080</string>
       <property name="geometry">
        <rect>
         <x>170</x>
-        <y>446</y>
+        <y>570</y>
         <width>221</width>
         <height>33</height>
        </rect>
@@ -2822,10 +2828,10 @@ Exampe 2: ${gateway}:8080</string>
        <bool>true</bool>
       </property>
       <property name="frameShape">
-       <enum>QFrame::Shape::NoFrame</enum>
+       <enum>QFrame::NoFrame</enum>
       </property>
       <property name="frameShadow">
-       <enum>QFrame::Shadow::Plain</enum>
+       <enum>QFrame::Plain</enum>
       </property>
       <property name="openExternalLinks">
        <bool>false</bool>

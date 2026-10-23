@@ -62,7 +62,12 @@ tabManager::tabManager( settings& s,
 
 		m_ctx.logger().updateView( true ) ;
 
-		m_ctx.getVersionInfo().checkMediaDownloaderUpdate( engines ) ;
+		/*
+		 * The update check is started from gotEvent() once the
+		 * configured proxy has been applied to avoid sending network
+		 * requests before the proxy is set.
+		 */
+		m_updateCheckPending = true ;
 	}else{
 		this->disableAll() ;
 
@@ -167,7 +172,20 @@ void tabManager::setDefaultEngines()
 
 void tabManager::setProxy( const settings::proxySettings& proxy,const settings::proxySettings::type& m )
 {
-	proxy::set( m_ctx,m_firstTimeSettingProxy,proxy.proxyAddress(),m ) ;
+	proxy::set( m_ctx,m_firstTimeSettingProxy,proxy.proxyAddress(),m,[ this ](){
+
+		this->checkForUpdates() ;
+	} ) ;
+}
+
+void tabManager::checkForUpdates()
+{
+	if( m_updateCheckPending ){
+
+		m_updateCheckPending = false ;
+
+		m_ctx.getVersionInfo().checkMediaDownloaderUpdate( m_ctx.Engines().getEngines() ) ;
+	}
 }
 
 void tabManager::clipboardEvent( QClipboard::Mode mode )
@@ -268,31 +286,44 @@ tabManager& tabManager::gotEvent( const QByteArray& s )
 {
 	auto jsonDoc = utility::jsonDoc( s ) ;
 
+	if( m_firstTimeSettingProxy ){
+
+		QString m ;
+
+		if( jsonDoc.valid() ){
+
+			m = jsonDoc.toObject().value( "--proxy" ).toString() ;
+		}
+
+		if( m.isEmpty() ){
+
+			auto s = m_ctx.Settings().getProxySettings() ;
+			auto t = s.types() ;
+
+			if( !t.none() ){
+
+				/*
+				 * setProxy() starts the pending update check once the
+				 * proxy is applied,possibly asynchronously
+				 */
+				this->setProxy( s,t ) ;
+			}else{
+				m_ctx.setNetworkProxy( m,m_firstTimeSettingProxy ) ;
+
+				this->checkForUpdates() ;
+			}
+		}else{
+			m_ctx.setNetworkProxy( m,m_firstTimeSettingProxy ) ;
+
+			this->checkForUpdates() ;
+		}
+
+		m_firstTimeSettingProxy = false ;
+	}
+
 	if( jsonDoc.valid() ){
 
 		auto e = jsonDoc.toObject() ;
-
-		if( m_firstTimeSettingProxy ){
-
-			auto m = e.value( "--proxy" ).toString() ;
-
-			if( m.isEmpty() ){
-
-				auto s = m_ctx.Settings().getProxySettings() ;
-				auto t = s.types() ;
-
-				if( !t.none() ){
-
-					this->setProxy( s,t ) ;
-				}else{
-					m_ctx.setNetworkProxy( m,m_firstTimeSettingProxy ) ;
-				}
-			}else{
-				m_ctx.setNetworkProxy( m,m_firstTimeSettingProxy ) ;
-			}
-
-			m_firstTimeSettingProxy = false ;
-		}
 
 		m_basicdownloader.gotEvent( e ) ;
 		m_batchdownloader.gotEvent( e ) ;

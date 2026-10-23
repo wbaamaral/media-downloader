@@ -32,6 +32,7 @@
 #include <QMimeData>
 #include <QFileDialog>
 #include <QSysInfo>
+#include <QPointer>
 
 #include <ctime>
 #include <cstring>
@@ -372,17 +373,39 @@ QString utility::windowsGetClipBoardText( const ContextWinId& wId )
 
 	String s ;
 
-	auto format = utility::Qt6Version() ? CF_UNICODETEXT : CF_TEXT ;
+	/*
+	 * Always use CF_UNICODETEXT, Windows synthesizes it from CF_TEXT
+	 * when necessary and its data is always wchar_t regardless of
+	 * whether UNICODE is defined or not.
+	 */
+	auto format = CF_UNICODETEXT ;
 
 	if( IsClipboardFormatAvailable( format ) ){
 
-		if( OpenClipboard( wId.value() ) ){
+		bool opened = false ;
+
+		for( int i = 0 ; i < 5 ; i++ ){
+
+			if( OpenClipboard( wId.value() ) ){
+
+				opened = true ;
+
+				break ;
+			}else{
+				/*
+				 * Another application may be holding the clipboard
+				 */
+				Sleep( 20 ) ;
+			}
+		}
+
+		if( opened ){
 
 			auto hglb = GetClipboardData( format ) ;
 
 			if( hglb ){
 
-				auto lptstr = static_cast< LPTSTR >( GlobalLock( hglb ) ) ;
+				auto lptstr = static_cast< const wchar_t * >( GlobalLock( hglb ) ) ;
 
 				if( lptstr ){
 
@@ -393,6 +416,8 @@ QString utility::windowsGetClipBoardText( const ContextWinId& wId )
 			}
 
 			CloseClipboard() ;
+		}else{
+			qDebug() << "Failed to open clipboard,error code:" << GetLastError() ;
 		}
 	}
 
@@ -1048,16 +1073,24 @@ bool utility::Terminator::terminate( QProcess& exe )
 		class meaw
 		{
 		public:
-			meaw( QProcess& exe ) : m_exe( exe )
+			/*
+			 * The process id is captured here, on the thread that owns
+			 * the QProcess object, and the QProcess object is tracked
+			 * through a QPointer since it may be deleted before fg() runs.
+			 */
+			meaw( QProcess& exe ) : m_exe( &exe ),m_pid( QString::number( exe.processId() ) )
 			{
 			}
 			void bg()
 			{
-				this->terminate( QString::number( m_exe.processId() ) ) ;
+				this->terminate( m_pid ) ;
 			}
 			void fg()
 			{
-				m_exe.terminate() ;
+				if( m_exe && m_exe->state() != QProcess::ProcessState::NotRunning ){
+
+					m_exe->terminate() ;
+				}
 			}
 		private:
 			void terminate( const QString& id )
@@ -1087,7 +1120,8 @@ bool utility::Terminator::terminate( QProcess& exe )
 					}
 				}
 			}
-			QProcess& m_exe ;
+			QPointer< QProcess > m_exe ;
+			QString m_pid ;
 		} ;
 
 		utils::qthread::run( meaw( exe ) ) ;
@@ -1390,7 +1424,7 @@ QString utility::clipboardText()
 
 		auto e = m->mimeData() ;
 
-		if( e->hasText() ){
+		if( e && e->hasText() ){
 
 			return e->text() ;
 		}
@@ -1926,20 +1960,13 @@ static bool _start_updated( QProcess& exe )
 #endif
 }
 
-bool utility::startedUpdatedVersion( settings& s,const utility::cliArguments& cargs )
+/*
+ * Moves a downloaded update(update_new) in place of the current one(update).
+ * On failure,"update" is left as it was(or restored) so that a previously
+ * applied update keeps being used.
+ */
+static QString _applyPendingUpdate( const QString& update_new,const QString& update )
 {
-	if( utility::platformIsNOTWindows() ){
-
-		return false ;
-	}
-
-	const auto& cpath = s.configPaths() ;
-
-	auto ew = cpath.endsWith( "/" ) ;
-
-	const auto update_new  = ew ? cpath + "update_new" : cpath + "/update_new" ;
-	const auto update      = ew ? cpath + "update" : cpath + "/update" ;
-
 	QString updated_old ;
 
 	if( QFile::exists( update_new ) ){
@@ -1962,11 +1989,55 @@ bool utility::startedUpdatedVersion( settings& s,const utility::cliArguments& ca
 				}
 			}
 
-			dir.rename( update,updated_old ) ;
+			if( !dir.rename( update,updated_old ) ){
+
+				/*
+				 * No UI exists yet, log to stderr and continue with
+				 * the current version leaving everything as is.
+				 */
+				qDebug() << "Failed to rename" << update << "to" << updated_old ;
+				qDebug() << "Skipping update,running the previous one if any" ;
+
+				return {} ;
+			}
 		}
 
-		dir.rename( update_new,update ) ;
+		if( !dir.rename( update_new,update ) ){
+
+			qDebug() << "Failed to rename" << update_new << "to" << update ;
+
+			if( !updated_old.isEmpty() ){
+
+				if( !dir.rename( updated_old,update ) ){
+
+					qDebug() << "Failed to restore" << updated_old << "to" << update ;
+				}
+			}
+
+			qDebug() << "Skipping update,running the previous one if any" ;
+
+			return {} ;
+		}
 	}
+
+	return updated_old ;
+}
+
+bool utility::startedUpdatedVersion( settings& s,const utility::cliArguments& cargs )
+{
+	if( utility::platformIsNOTWindows() ){
+
+		return false ;
+	}
+
+	const auto& cpath = s.configPaths() ;
+
+	auto ew = cpath.endsWith( "/" ) ;
+
+	const auto update_new  = ew ? cpath + "update_new" : cpath + "/update_new" ;
+	const auto update      = ew ? cpath + "update" : cpath + "/update" ;
+
+	auto updated_old = _applyPendingUpdate( update_new,update ) ;
 
 	QString exePath = update + "/media-downloader.exe" ;
 
@@ -2577,17 +2648,48 @@ void utility::addToListOptionsFromsDownload( QStringList& args,
 		args = args + ee ;
 	}
 
-	auto ss = args + _listOptionsFromDownloadOptions( downLoadOptions ) ;
+	/*
+	 * A "--proxy" given in the options of a single download applies
+	 * only to the engine process started for it. It is passed to the
+	 * engine on its command line and must not change the application
+	 * wide proxy(QNetworkProxy::setApplicationProxy()) since that would
+	 * leak it to thumbnails,metadata,updates and every other download.
+	 */
+	auto ss = _listOptionsFromDownloadOptions( downLoadOptions ) ;
 
-	for( int i = ss.size() - 2 ; i > -1 ; i-- ){
+	if( ss.isEmpty() ){
 
-		if( ss[ i ] == "--proxy" ){
+		return ;
+	}
 
-			return mm.setApplicationProxy( ss[ i + 1 ] ) ;
+	/*
+	 * The proxy of this download replaces any "--proxy" added above so that
+	 * the engine sees only one, some engines(getsauce) use the first one.
+	 */
+	bool replaced = false ;
+
+	for( int i = 0 ; i + 1 < args.size() ; ){
+
+		if( args[ i ] == "--proxy" ){
+
+			if( replaced ){
+
+				args.removeAt( i + 1 ) ;
+				args.removeAt( i ) ;
+			}else{
+				args[ i + 1 ] = ss[ 1 ] ;
+				replaced = true ;
+				i += 2 ;
+			}
+		}else{
+			i++ ;
 		}
 	}
 
-	mm.setDefaultProxy() ;
+	if( !replaced ){
+
+		args = args + ss ;
+	}
 }
 
 bool utility::copyFile( const QString& s,const QString& d,bool setExePermssion )

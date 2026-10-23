@@ -4,7 +4,7 @@
 # Descrição:   Build unificado + empacotamento (tarball/DEB/RPM) para Linux
 # Autor:       wba-skill-sysadm
 # Data:        $(date +%F)
-# Uso:         ./build.sh [--qt5|--qt6] [--clean] [--install-deps] [--package FORMAT] [--jobs N] [--run] [--dry-run]
+# Uso:         ./build.sh [--qt5|--qt6] [--clean] [--install-deps] [--package FORMAT] [--jobs N] [--run] [--no-tests] [--dry-run]
 # Dependências: bash 4+, cmake, gcc/g++, qt5-base-dev ou qt6-base-dev
 # ==============================================================================
 
@@ -42,6 +42,7 @@ DRY_RUN=false
 CLEAN=false
 INSTALL_DEPS=false
 RUN_AFTER=false
+RUN_TESTS=true
 PACKAGE_FORMAT=""
 QT_VERSION=""
 JOBS="$(nproc)"
@@ -51,13 +52,14 @@ usage() {
 Uso: $0 [OPÇÕES]
 
 Opções:
-  --qt5              Forçar build com Qt5
-  --qt6              Forçar build com Qt6
+  --qt5              Forçar build com Qt5 (falha se Qt5 não existir)
+  --qt6              Forçar build com Qt6 (falha se Qt6 não existir)
   --clean            Limpar build/ antes de configurar
-  --install-deps     Instalar dependências do sistema (requer root)
+  --install-deps     Instalar dependências do sistema (requer root; Qt6 com --qt6, senão Qt5)
   --package FORMAT   Empacotar: tarball, deb, rpm, all
   --jobs N           Paralelismo (padrão: $(nproc))
   --run              Executar após build
+  --no-tests         Não executar ctest após o build
   --dry-run          Mostrar comandos sem executar
   -h, --help         Mostrar esta ajuda
 
@@ -79,6 +81,7 @@ while [[ $# -gt 0 ]]; do
         --package)       shift; PACKAGE_FORMAT="${1:-}" ;;
         --jobs)          shift; JOBS="${1:-$(nproc)}" ;;
         --run)           RUN_AFTER=true ;;
+        --no-tests)      RUN_TESTS=false ;;
         --dry-run)       DRY_RUN=true ;;
         -h|--help)       usage ;;
         *) die "Argumento desconhecido: $1 (use --help)" ;;
@@ -124,31 +127,48 @@ detect_distro() {
 
 # ── Instalação de dependências ────────────────────────────────────────────────
 install_deps_debian() {
-    title "Instalando dependências (Debian/Ubuntu)"
+    title "Instalando dependências Qt${QT_DEPS} (Debian/Ubuntu)"
     run "sudo apt update"
-    run "sudo apt install -y build-essential cmake git \
-        qtbase5-dev qtdeclarative5-dev \
-        qml-module-qtquick-controls2 qml-module-qtwebsockets \
-        qml-module-qtwebchannel qttools5-dev qttools5-dev-tools"
+    if [[ "$QT_DEPS" == "6" ]]; then
+        run "sudo apt install -y build-essential cmake git \
+            qt6-base-dev qt6-tools-dev qt6-tools-dev-tools libgl-dev"
+    else
+        run "sudo apt install -y build-essential cmake git \
+            qtbase5-dev qtdeclarative5-dev \
+            qml-module-qtquick-controls2 qml-module-qtwebsockets \
+            qml-module-qtwebchannel qttools5-dev qttools5-dev-tools"
+    fi
 }
 
 install_deps_fedora() {
-    title "Instalando dependências (Fedora/RHEL)"
-    run "sudo dnf -y install gcc gcc-c++ make cmake git \
-        qt5-qtbase-devel qt5-qtdeclarative-devel \
-        qt5-qtquickcontrols2-devel qt5-qtwebsockets-devel \
-        qt5-qtwebchannel-devel qt5-qttools-devel"
+    title "Instalando dependências Qt${QT_DEPS} (Fedora/RHEL)"
+    if [[ "$QT_DEPS" == "6" ]]; then
+        run "sudo dnf -y install gcc gcc-c++ make cmake git \
+            qt6-qtbase-devel qt6-qttools-devel"
+    else
+        run "sudo dnf -y install gcc gcc-c++ make cmake git \
+            qt5-qtbase-devel qt5-qtdeclarative-devel \
+            qt5-qtquickcontrols2-devel qt5-qtwebsockets-devel \
+            qt5-qtwebchannel-devel qt5-qttools-devel"
+    fi
 }
 
 install_deps_arch() {
-    title "Instalando dependências (Arch/Manjaro)"
-    run "sudo pacman -Syu --needed --noconfirm --noprogressbar \
-        base-devel cmake git \
-        qt5-base qt5-declarative qt5-quickcontrols2 \
-        qt5-websockets qt5-webchannel qt5-tools"
+    title "Instalando dependências Qt${QT_DEPS} (Arch/Manjaro)"
+    if [[ "$QT_DEPS" == "6" ]]; then
+        run "sudo pacman -Syu --needed --noconfirm --noprogressbar \
+            base-devel cmake git qt6-base qt6-tools"
+    else
+        run "sudo pacman -Syu --needed --noconfirm --noprogressbar \
+            base-devel cmake git \
+            qt5-base qt5-declarative qt5-quickcontrols2 \
+            qt5-websockets qt5-webchannel qt5-tools"
+    fi
 }
 
 install_deps() {
+    # Qt6 somente quando --qt6; caso contrário (auto/--qt5) instala Qt5
+    QT_DEPS="${QT_VERSION:-5}"
     detect_distro
     case "$DISTRO_ID" in
         debian|ubuntu|linuxmint|pop)    install_deps_debian ;;
@@ -163,18 +183,18 @@ install_deps() {
 configure_cmake() {
     title "Configurando CMake"
 
-    local cmake_args=("-DCMAKE_BUILD_TYPE=Release")
+    # Sempre passar a escolha explícita: o valor fica no cache do CMake, então
+    # AUTO precisa ser reenviado para desfazer um --qt5/--qt6 anterior.
+    # (string com espaços: IFS=$'\n\t' faria ${arr[*]} juntar com quebra de linha)
+    local cmake_args="-DCMAKE_BUILD_TYPE=Release"
 
-    if [[ -n "$QT_VERSION" ]]; then
-        if [[ "$QT_VERSION" == "6" ]]; then
-            cmake_args+=("-DBUILD_WITH_QT6=ON")
-        else
-            cmake_args+=("-DBUILD_WITH_QT6=OFF")
-        fi
-        info "Qt forçado: Qt${QT_VERSION}"
-    fi
+    case "$QT_VERSION" in
+        6)  cmake_args+=" -DBUILD_WITH_QT6=ON";  info "Qt forçado: Qt6" ;;
+        5)  cmake_args+=" -DBUILD_WITH_QT6=OFF"; info "Qt forçado: Qt5" ;;
+        *)  cmake_args+=" -DBUILD_WITH_QT6=AUTO"; info "Qt: auto-detect (Qt5, senão Qt6)" ;;
+    esac
 
-    run "cmake ${cmake_args[*]} -B '$BUILD_DIR' -S '$SCRIPT_DIR'"
+    run "cmake ${cmake_args} -B '$BUILD_DIR' -S '$SCRIPT_DIR'"
 }
 
 # ── Build ─────────────────────────────────────────────────────────────────────
@@ -182,6 +202,23 @@ build_project() {
     title "Compilando (${JOBS} jobs)"
     run "cmake --build '$BUILD_DIR' -j '${JOBS}'"
     ok "Build concluído"
+}
+
+# ── Testes ────────────────────────────────────────────────────────────────────
+run_tests() {
+    if ! $RUN_TESTS; then
+        warn "Testes pulados (--no-tests)"
+        return 0
+    fi
+    title "Executando testes (ctest)"
+    if ! $DRY_RUN && [[ ! -f "$BUILD_DIR/CTestTestfile.cmake" ]]; then
+        warn "Nenhum teste registrado (CTestTestfile.cmake ausente) — pulando"
+        return 0
+    fi
+    # subshell com cd em vez de --test-dir (CMake >= 3.20): funciona com CMake antigo
+    # e não altera o diretório corrente do script (run usa eval)
+    run "( cd '$BUILD_DIR' && ctest --output-on-failure )"
+    ok "Testes concluídos"
 }
 
 # ── Empacotamento ─────────────────────────────────────────────────────────────
@@ -254,6 +291,7 @@ fi
 # Pipeline principal
 configure_cmake
 build_project
+run_tests
 do_package
 
 # Executar (se solicitado)

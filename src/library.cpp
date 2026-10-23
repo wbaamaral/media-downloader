@@ -75,6 +75,8 @@ library::library( const Context& ctx ) :
 
 			m_ui.pbLibraryCancel->setEnabled( true ) ;
 
+			m_continue = true ;
+
 			this->deleteEntries( m_table.selectedRows() ) ;
 		}
 	} ) ;
@@ -253,7 +255,12 @@ bool library::deletePath( const QString& m )
 
 void library::deleteEntries( library::iter items )
 {
-	if( items.empty() ){
+	/*
+	 * m_continue is set to true by the user initiated operation that
+	 * started the deletion and to false by the cancel button,it is
+	 * checked between items to honor cancellation of a batch delete.
+	 */
+	if( items.empty() || !m_continue ){
 
 		return this->enableAll() ;
 	}
@@ -346,6 +353,8 @@ void library::deleteEntry( int row )
 
 		m_ui.pbLibraryCancel->setEnabled( true ) ;
 
+		m_continue = true ;
+
 		this->deleteEntries( row ) ;
 	}
 }
@@ -355,6 +364,8 @@ void library::deleteAll()
 	this->disableAll() ;
 
 	m_ui.pbLibraryCancel->setEnabled( true ) ;
+
+	m_continue = true ;
 
 	class meaw
 	{
@@ -640,6 +651,8 @@ void library::arrangeEntries( int )
 
 		m_ui.pbLibraryCancel->setEnabled( true ) ;
 
+		m_continue = true ;
+
 		this->arrangeAndShow() ;
 	} ) ;
 
@@ -653,6 +666,8 @@ void library::showContents( const QString& path )
 	this->disableAll() ;
 
 	m_ui.pbLibraryCancel->setEnabled( true ) ;
+
+	m_continue = true ;
 
 	class meaw
 	{

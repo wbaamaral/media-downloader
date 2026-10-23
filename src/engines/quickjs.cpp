@@ -20,6 +20,8 @@
 #include "quickjs.h"
 #include "../utility.h"
 
+#include <QRegularExpression>
+
 QJsonObject quickjs::init( Logger& logger,const engines::enginePaths& enginePath )
 {
 	auto m = enginePath.enginePath( "quickjs.json" ) ;
@@ -106,7 +108,18 @@ engines::metadata quickjs::parseJsonDataFromGitHub( const QJsonDocument& e )
 {
 	auto version = e.object().value( "version" ).toString() ;
 
-	if( !version.isEmpty() && ( utility::platformIsLinux() || utility::platformIsWindows() ) ){
+	/*
+	 * "version" comes from a remote file and is used to build a file name,
+	 * only accept a conservative set of characters.
+	 */
+	QRegularExpression rgx( "^[0-9A-Za-z._-]+$" ) ;
+
+	if( !rgx.match( version ).hasMatch() || version == "." || version == ".." ){
+
+		return {} ;
+	}
+
+	if( utility::platformIsLinux() || utility::platformIsWindows() ){
 
 		auto fileName = QString( "%1-%2.zip" ).arg( this->namePrefix(),version ) ;
 		auto url      = "https://bellard.org/quickjs/binary_releases/" + fileName ;

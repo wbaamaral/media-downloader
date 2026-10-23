@@ -109,11 +109,17 @@ ok "Tag v$VERSION disponível"
 
 # ── Build ─────────────────────────────────────────────────────────────────────
 if ! $SKIP_BUILD; then
-    title "Build Linux"
+    # Limpar artefatos antigos de dist/ para não enviar pacotes obsoletos
+    title "Limpando dist/"
+    run "mkdir -p '$DIST_DIR'"
+    run "find '$DIST_DIR' -mindepth 1 -maxdepth 1 -exec rm -rf {} +"
+
+    title "Build Linux + testes"
+    # build.sh executa ctest após compilar; falha nos testes aborta (set -e)
     run "'$SCRIPT_DIR/build.sh' --clean --package all"
-    ok "Build concluído"
+    ok "Build e testes concluídos"
 else
-    warn "Build pulado (--skip-build)"
+    warn "Build pulado (--skip-build): testes NÃO executados e dist/ será enviado como está"
 fi
 
 # ── Verificar pacotes ─────────────────────────────────────────────────────────
@@ -130,9 +136,29 @@ while IFS= read -r -d '' f; do
 done < <(find "$DIST_DIR" -maxdepth 1 -type f \( -name "*.tar.xz" -o -name "*.deb" -o -name "*.rpm" -o -name "*.zip" -o -name "*.exe" \) -print0)
 
 if [[ ${#PACKAGES[@]} -eq 0 ]]; then
-    die "Nenhum pacote encontrado em dist/"
+    if $DRY_RUN; then
+        warn "Nenhum pacote em dist/ (esperado em dry-run)"
+    else
+        die "Nenhum pacote encontrado em dist/"
+    fi
 fi
 ok "${#PACKAGES[@]} pacote(s) encontrado(s)"
+
+# ── Checksums ─────────────────────────────────────────────────────────────────
+title "Gerando SHA256SUMS"
+SUMS_FILE="$DIST_DIR/SHA256SUMS"
+if $DRY_RUN; then
+    echo -e "${YELLOW}[DRY]${RESET}   (cd '$DIST_DIR' && sha256sum <pacotes> > SHA256SUMS)"
+else
+    (
+        cd "$DIST_DIR"
+        names=()
+        for f in "${PACKAGES[@]}"; do names+=("$(basename "$f")"); done
+        sha256sum -- "${names[@]}" > SHA256SUMS
+    )
+    cat "$SUMS_FILE"
+    ok "SHA256SUMS: $SUMS_FILE"
+fi
 
 # ── Tag git ───────────────────────────────────────────────────────────────────
 title "Criando tag v$VERSION"
@@ -161,7 +187,10 @@ RELEASE_ARGS=(
 ### Instalação
 **Debian/Ubuntu:** \`sudo dpkg -i media-downloader-$VERSION-Linux.deb\`
 **Fedora/RHEL:** \`sudo rpm -i media-downloader-$VERSION-Linux.rpm\`
-**Portátil:** descompactar e executar \`media-downloader\`"
+**Portátil:** descompactar e executar \`media-downloader\`
+
+### Verificação
+\`sha256sum -c SHA256SUMS --ignore-missing\`"
     --draft
 )
 
@@ -169,6 +198,7 @@ RELEASE_ARGS=(
 for pkg in "${PACKAGES[@]}"; do
     RELEASE_ARGS+=("$pkg")
 done
+RELEASE_ARGS+=("$SUMS_FILE")
 
 if $DRY_RUN; then
     echo -e "${YELLOW}[DRY]${RESET}   gh release create ${RELEASE_ARGS[*]}"
@@ -191,6 +221,6 @@ ok "Release: $RELEASE_URL"
 echo ""
 info "Próximos passos:"
 info "  1. Build Windows: .\\build_windows.ps1 -Clean -Package"
-info "  2. Upload dos bins Windows na draft release"
+info "  2. Upload dos bins Windows na draft release (e atualizar SHA256SUMS)"
 info "  3. Clique 'Publish release'"
 ok "Log: $LOG_FILE"

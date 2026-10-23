@@ -4,7 +4,7 @@
 # Descrição:   Build unificado + empacotamento (zip/Inno Setup) para Windows
 # Autor:       wba-skill-sysadm
 # Data:        2026-07-27
-# Uso:         .\build_windows.ps1 [-QtVersion 5|6|auto] [-Clean] [-Package] [-Run] [-DryRun]
+# Uso:         .\build_windows.ps1 [-QtVersion 5|6|auto] [-Clean] [-Package] [-Run] [-SkipTests] [-DryRun]
 # Dependências: PowerShell 5.1+, CMake, MinGW (Qt), Git
 # ==============================================================================
 
@@ -19,6 +19,7 @@ param(
     [switch]$Clean,
     [switch]$Package,
     [switch]$Run,
+    [switch]$SkipTests,
     [switch]$DryRun
 )
 
@@ -287,7 +288,7 @@ if ($DryRun) {
 }
 
 Write-Log "=== INÍCIO DO BUILD ==="
-Write-Log "Parâmetros: QtVersion=$QtVersion Arch=$Arch Clean=$Clean Package=$Package DryRun=$DryRun"
+Write-Log "Parâmetros: QtVersion=$QtVersion Arch=$Arch Clean=$Clean Package=$Package SkipTests=$SkipTests DryRun=$DryRun"
 
 # ── 1. Detectar ferramentas ───────────────────────────────────────────────────
 Write-Title "Detectando ferramentas"
@@ -303,6 +304,13 @@ if (-not $qtInfo) {
     exit 1
 }
 Write-Ok "Qt $($qtInfo.Version) ($($qtInfo.Compiler), $($qtInfo.Arch)): $($qtInfo.Path)"
+
+# Major do Qt efetivamente usado — passado explicitamente ao CMake
+# (BUILD_WITH_QT6=ON/OFF faz o CMake falhar em vez de trocar de Qt silenciosamente)
+$QtMajor = $qtInfo.Version.Split('.')[0]
+$QtCmakeFlag = if ($QtMajor -eq '6') { "-DBUILD_WITH_QT6=ON" } else { "-DBUILD_WITH_QT6=OFF" }
+# Raiz da instalação do Qt (ex.: C:\Qt) — usada para achar Tools\
+$QtRoot = Split-Path -Parent (Split-Path -Parent $qtInfo.Path)
 
 # Detectar MinGW
 $mingwPath = Find-MinGW -QtPath $qtInfo.Path
@@ -382,6 +390,7 @@ $cmakeArgs = @(
     "-DCMAKE_VERBOSE_MAKEFILE=FALSE"
     "-DCMAKE_BUILD_TYPE:STRING=Release"
     "-DCMAKE_PREFIX_PATH=$($qtInfo.Path)"
+    $QtCmakeFlag
     "-DCMAKE_C_COMPILER=$mingwPath\bin\gcc.exe"
     "-DCMAKE_CXX_COMPILER=$mingwPath\bin\g++.exe"
     "-G", "MinGW Makefiles"
@@ -410,6 +419,7 @@ $cmakeArgs2 = @(
     "-DLIBRARIES_LOCATION=$BuildDir\$portableDir"
     "-DOUTPUT_PATH=$BuildDir"
     "-DSOURCE_PATH=$SrcDir"
+    $QtCmakeFlag
     "-DCMAKE_C_COMPILER=$mingwPath\bin\gcc.exe"
     "-DCMAKE_CXX_COMPILER=$mingwPath\bin\g++.exe"
     "-G", "MinGW Makefiles"
@@ -432,6 +442,31 @@ if ($result.ExitCode -ne 0) {
     exit 1
 }
 Write-Ok "Build concluído"
+
+# ── 7b. Testes (ctest) ───────────────────────────────────────────────────────
+if ($SkipTests) {
+    Write-Warn "Testes pulados (-SkipTests)"
+} elseif ((-not $DryRun) -and (-not (Test-Path (Join-Path $cmakeBuildDir "CTestTestfile.cmake")))) {
+    Write-Warn "Nenhum teste registrado (CTestTestfile.cmake ausente) — pulando"
+} else {
+    Write-Title "Executando testes (ctest)"
+    # Qt\bin já está no PATH (seção 2), então os testes encontram as DLLs do Qt
+    Push-Location $cmakeBuildDir
+    try {
+        $result = Invoke-Ext -FilePath "ctest.exe" -Arguments @("--output-on-failure")
+    } finally {
+        Pop-Location
+    }
+    if ($result.ExitCode -eq 127) {
+        Write-Warn "ctest.exe não encontrado — testes não executados"
+    } elseif ($result.ExitCode -ne 0) {
+        Write-Host $result.Output
+        Write-Fail "Testes falharam"
+        exit 1
+    } else {
+        Write-Ok "Testes concluídos"
+    }
+}
 
 # ── 8. Empacotamento ─────────────────────────────────────────────────────────
 if ($Package) {
@@ -494,8 +529,13 @@ if ($Package) {
         Write-Warn "windeployqt não encontrado — DLLs do Qt não foram coletadas"
     }
 
-    # 8d. OpenSSL DLLs (Qt 5.15 precisa de OpenSSL 1.1.x para TLS)
-    $sslDlls = @("libssl-1_1-x64.dll", "libcrypto-1_1-x64.dll")
+    # 8d. OpenSSL DLLs — Qt5 usa OpenSSL 1.1.x, Qt6 usa OpenSSL 3.x
+    #     (Qt6 também tem o backend schannel; OpenSSL continua recomendado)
+    $sslSuffix = if ($Arch -eq "x64") { "-x64" } else { "" }
+    $sslVer    = if ($QtMajor -eq '6') { "3" } else { "1_1" }
+    $sslLabel  = if ($QtMajor -eq '6') { "3.x" } else { "1.1.x" }
+    $sslDlls = @("libssl-$sslVer$sslSuffix.dll", "libcrypto-$sslVer$sslSuffix.dll")
+    $winArch = if ($Arch -eq "x64") { "Win_x64" } else { "Win_x86" }
     $needSsl = $false
     foreach ($dll in $sslDlls) {
         if (-not (Test-Path (Join-Path $portablePath $dll))) {
@@ -504,10 +544,17 @@ if ($Package) {
         }
     }
     if ($needSsl) {
-        Write-Info "Procurando OpenSSL 1.1.x DLLs..."
+        Write-Info "Procurando OpenSSL $sslLabel DLLs ($($sslDlls -join ', '))..."
         $sslSources = @(
+            "$QtRoot\Tools\OpenSSLv3\$winArch\bin"
+            "$QtRoot\Tools\OpenSSL\$winArch\bin"
+            "$QtRoot\Tools\OpenSSLv3\bin"
+            "$QtRoot\Tools\OpenSSL\bin"
+            "C:\Program Files\OpenSSL-Win64\bin"
             "C:\Program Files\OpenSSL-Win64"
+            "C:\Program Files\OpenSSL\bin"
             "C:\Program Files\OpenSSL"
+            "C:\Program Files (x86)\OpenSSL-Win32\bin"
             "C:\Program Files (x86)\OpenSSL-Win64"
             "C:\Program Files (x86)\OpenSSL"
             "$SrcDir\openssl"
@@ -525,7 +572,11 @@ if ($Package) {
             if ($allFound) {
                 foreach ($dll in $sslDlls) {
                     $srcFile = Join-Path $srcDir $dll
-                    Copy-Item -Path $srcFile -Destination $portablePath
+                    if ($DryRun) {
+                        Write-Host "[DRY]   Copy-Item '$srcFile' -> '$portablePath'" -ForegroundColor Yellow
+                    } else {
+                        Copy-Item -Path $srcFile -Destination $portablePath
+                    }
                     Write-Ok "OpenSSL: $dll (de $srcDir)"
                 }
                 $sslCopied = $true
@@ -533,14 +584,34 @@ if ($Package) {
             }
         }
         if (-not $sslCopied) {
-            Write-Warn "OpenSSL 1.1.x DLLs não encontradas — TLS pode não funcionar"
-            Write-Warn "Copie manualmente libssl-1_1-x64.dll e libcrypto-1_1-x64.dll para o diretorio de instalação"
+            Write-Warn "OpenSSL $sslLabel DLLs não encontradas (Qt$QtMajor) — TLS pode não funcionar"
+            Write-Warn "Copie manualmente $($sslDlls -join ' e ') para o diretorio de instalação"
         }
     } else {
         Write-Ok "OpenSSL DLLs já presentes"
     }
 
     # 8e. bsdtar (necessário para extrair zips: auto-update, deno, etc.)
+    #     O bsdtar.exe do Git for Windows é um binário MSYS2: precisa das
+    #     msys-*.dll do mesmo diretório para rodar fora do Git.
+    function Get-MsysDeps {
+        param([string]$Binary, [string]$Dir, [hashtable]$Seen)
+        $objdump = Get-Command objdump.exe -ErrorAction SilentlyContinue
+        if (-not $objdump) { return $null }
+        $out = & $objdump.Source -p $Binary 2>$null
+        foreach ($line in $out) {
+            if ($line -match 'DLL Name:\s*(\S+)') {
+                $name = $Matches[1]
+                $cand = Join-Path $Dir $name
+                if ((-not $Seen.ContainsKey($name)) -and (Test-Path $cand)) {
+                    $Seen[$name] = $cand
+                    Get-MsysDeps -Binary $cand -Dir $Dir -Seen $Seen | Out-Null
+                }
+            }
+        }
+        return $Seen
+    }
+
     $bsdtarDst = Join-Path $portablePath "bsdtar.exe"
     if (-not (Test-Path $bsdtarDst)) {
         $bsdtarSources = @(
@@ -551,8 +622,32 @@ if ($Package) {
         $bsdtarCopied = $false
         foreach ($src in $bsdtarSources) {
             if (Test-Path $src) {
-                Copy-Item -Path $src -Destination $bsdtarDst
+                $toCopy = @()
+                $srcBin = Split-Path -Parent $src
+                if ((Split-Path -Leaf $src) -eq "bsdtar.exe") {
+                    # Binário MSYS: resolver DLLs via objdump; fallback = todas msys-*.dll
+                    $deps = Get-MsysDeps -Binary $src -Dir $srcBin -Seen @{}
+                    if ($deps -and $deps.Count -gt 0) {
+                        $toCopy = @($deps.Values)
+                        Write-Info "bsdtar: $($toCopy.Count) DLL(s) MSYS resolvidas via objdump"
+                    } else {
+                        $toCopy = @(Get-ChildItem -Path $srcBin -Filter "msys-*.dll" -File -ErrorAction SilentlyContinue |
+                            ForEach-Object { $_.FullName })
+                        Write-Info "bsdtar: objdump indisponível — copiando todas msys-*.dll ($($toCopy.Count))"
+                    }
+                }
+                if ($DryRun) {
+                    Write-Host "[DRY]   Copy-Item '$src' -> '$bsdtarDst' (+ $($toCopy.Count) DLL(s))" -ForegroundColor Yellow
+                } else {
+                    Copy-Item -Path $src -Destination $bsdtarDst
+                    foreach ($dll in $toCopy) {
+                        Copy-Item -Path $dll -Destination $portablePath -Force
+                    }
+                }
                 Write-Ok "bsdtar: copiado de $src"
+                if ($toCopy.Count -gt 0) {
+                    Write-Warn "bsdtar MSYS copiado com runtime msys-*.dll — VALIDE executando '$bsdtarDst --version' em máquina sem Git"
+                }
                 $bsdtarCopied = $true
                 break
             }
@@ -564,12 +659,14 @@ if ($Package) {
         Write-Ok "bsdtar já presente"
     }
 
-    # 8e-2. Launcher batch (adiciona dir ao PATH para bsdtar/yt-dlp)
+    # 8e-2. Launcher batch: prefixa o dir do app ao PATH apenas do processo
+    #       iniciado (não altera o PATH do usuário/sistema). O app já procura
+    #       bsdtar/yt-dlp no próprio diretório; o launcher é só conveniência.
     $launcherBat = Join-Path $portablePath "media-downloader.bat"
     $launcherLines = @(
         "@echo off"
         "set PATH=%~dp0;%PATH%"
-        "start `"`" `%~dp0media-downloader.exe`""
+        "start `"`" `"%~dp0media-downloader.exe`""
     )
     if (-not $DryRun) {
         $launcherLines | Out-File -FilePath $launcherBat -Encoding ASCII

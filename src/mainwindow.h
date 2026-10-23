@@ -50,7 +50,7 @@ public:
 	void resetTitle() ;
 	void Show() ;
 	void processEvent( const QByteArray& e ) ;
-	void quitApp() ;
+	Q_INVOKABLE void quitApp() ;
 	void saveData() ;
 	void notifyOnDownloadComplete( const QString& = {} ) ;
 	void notifyOnAllDownloadComplete( const QString& ) ;
@@ -72,6 +72,7 @@ private:
 		MainWindow::setUpSignal( sigs ... ) ;
 	}
 	static void setUpSignals( MainWindow * ) ;
+	bool trayIconUsable() ;
 
 	class setUpMainWindow
 	{

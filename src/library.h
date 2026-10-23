@@ -98,7 +98,7 @@ private:
 	void addItem( const directoryEntries::iter& ) ;
 	const Context& m_ctx ;
 	settings& m_settings ;
-	std::atomic_bool m_continue ;
+	std::atomic_bool m_continue{ true } ;
 	Ui::MainWindow& m_ui ;
 	tableMiniWidget< directoryEntries::ICON,2 > m_table ;
 	QString m_downloadFolder ;

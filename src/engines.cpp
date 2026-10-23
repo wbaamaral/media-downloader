@@ -39,6 +39,7 @@
 #include "tableWidget.h"
 #include "context.hpp"
 #include "networkAccess.h"
+#include "utils/url_allowlist.hpp"
 
 #include <QJsonObject>
 #include <QJsonArray>
@@ -571,6 +572,36 @@ QString engines::findExecutable( const QString& exeName,bool searchFromBeginning
 
 	if( utility::platformIsLikeWindows() ){
 
+		QStringList appDir( utility::windowsApplicationDirPath() ) ;
+
+		auto findInAppDir = [ & ](){
+
+			auto m = this->findExecutable( exeName,appDir,false ) ;
+
+			if( m.isEmpty() && !exeName.endsWith( ".exe" ) ){
+
+				m = this->findExecutable( exeName + ".exe",appDir,false ) ;
+			}
+
+			return m ;
+		} ;
+
+		/*
+		 * Helper tools shipped next to media-downloader.exe must not be
+		 * shadowed by same named executables found in PATH.
+		 */
+		auto bundledHelper = utils::misc::equalsAny( exeName,"bsdtar","bsdtar.exe" ) ;
+
+		if( bundledHelper ){
+
+			auto m = findInAppDir() ;
+
+			if( !m.isEmpty() ){
+
+				return m ;
+			}
+		}
+
 		auto paths = this->processEnvironment().value( "PATH" ).split( ';' ) ;
 
 		auto m = this->findExecutable( exeName,paths,searchFromBeginning ) ;
@@ -580,16 +611,9 @@ QString engines::findExecutable( const QString& exeName,bool searchFromBeginning
 			m = this->findExecutable( exeName + ".exe",paths,searchFromBeginning ) ;
 		}
 
-		if( m.isEmpty() ){
+		if( m.isEmpty() && !bundledHelper ){
 
-			auto appDir = utility::windowsApplicationDirPath() ;
-
-			m = this->findExecutable( exeName,QStringList( appDir ),false ) ;
-
-			if( m.isEmpty() && !exeName.endsWith( ".exe" ) ){
-
-				m = this->findExecutable( exeName + ".exe",QStringList( appDir ),false ) ;
-			}
+			m = findInAppDir() ;
 		}
 
 		return m ;
@@ -1266,11 +1290,11 @@ QString engines::engine::versionString( const QString& data ) const
 
 bool engines::engine::validDownloadUrl() const
 {
-	auto a = "https://api.github.com" ;
-	auto b = "https://bellard.org/quickjs/binary_releases" ;
-	auto c = "https://codeberg.org" ;
+	QStringList allowed{ "https://api.github.com",
+			     "https://bellard.org/quickjs/binary_releases",
+			     "https://codeberg.org" } ;
 
-	return utils::misc::startsWithAny( m_downloadUrl,a,b,c ) ;
+	return utils::url::isAllowed( m_downloadUrl,allowed ) ;
 }
 
 void engines::engine::setPermissions( const QString& e ) const

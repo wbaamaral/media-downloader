@@ -965,7 +965,13 @@ void settings::setShowVersionInfoAndAutoDownloadUpdates( bool e )
 
 QString settings::textEncoding( const QString& engineName )
 {
-	return this->getOption( "TextEncoding_" + engineName,QString() ) ;
+	/*
+	 * "YtDlpTextEncoding" is the key used by older versions, keep honoring it
+	 * so existing users do not lose their configured encoding.
+	 */
+	auto m = m_settings.value( "YtDlpTextEncoding" ).toString() ;
+
+	return this->getOption( "TextEncoding_" + engineName,m ) ;
 }
 
 void settings::setTextEncoding( const QString& e,const QString& engineName )

@@ -203,9 +203,11 @@ void networkAccess::uMediaDownloaderM( networkAccess::updateMDOptions& md,
 
 			if( md.hash.isEmpty() ){
 
-				auto m = QObject::tr( "Skipping Checking Download Hash" ) ;
+				auto m = QObject::tr( "WARNING: no SHA256 digest published for this file, integrity NOT verified" ) ;
 
+				this->post( m_appName,utility::barLine(),md.id ) ;
 				this->post( m_appName,m,md.id ) ;
+				this->post( m_appName,utility::barLine(),md.id ) ;
 
 				this->extractMediaDownloader( md.move() ) ;
 			}else{
@@ -221,6 +223,13 @@ void networkAccess::uMediaDownloaderM( networkAccess::updateMDOptions& md,
 					this->extractMediaDownloader( md.move() ) ;
 				}else{
 					this->hashDoNotMatch( md.hash,m,md.id ) ;
+
+					auto err = utility::removeFile( md.tmpFile ) ;
+
+					if( !err.isEmpty() ){
+
+						this->failedToRemove( m_appName,md.tmpFile,err,md.id ) ;
+					}
 
 					md.status.done() ;
 
@@ -402,12 +411,29 @@ void networkAccess::extractMediaDownloader( networkAccess::updateMDOptions md ) 
 		}
 		void fg()
 		{
+			const auto& appName = m_parent.m_appName ;
+
 			if( !m_err.isEmpty() ){
 
-				m_parent.failedToRemove( m_parent.m_appName,m_md.finalPath,m_err,m_md.id ) ;
+				m_parent.failedToRemove( appName,m_md.finalPath,m_err,m_md.id ) ;
+
+				auto m = QObject::tr( "Update aborted, failed to remove old staging folder: %1" ) ;
+
+				m_parent.post( appName,m.arg( m_md.finalPath ),m_md.id ) ;
+
+				return this->failed() ;
 			}
 
 			auto exe = m_parent.m_ctx.Engines().findExecutable( "bsdtar.exe" ) ;
+
+			if( exe.isEmpty() || !QFile::exists( exe ) ){
+
+				auto m = QObject::tr( "bsdtar not found, cannot extract update" ) ;
+
+				m_parent.post( appName,m,m_md.id ) ;
+
+				return this->failed() ;
+			}
 
 			auto args = QStringList{ "-x","-f",m_md.tmpFile,"-C",m_md.tmpPath } ;
 
@@ -418,6 +444,14 @@ void networkAccess::extractMediaDownloader( networkAccess::updateMDOptions md ) 
 			utils::qprocess::run( exe,args,m,m_md.move(),&m_parent,&networkAccess::emDownloader ) ;
 		}
 	private:
+		void failed()
+		{
+			utility::removeFile( m_md.tmpFile ) ;
+
+			m_md.status.done() ;
+
+			m_parent.m_tabManager.enableAll() ;
+		}
 		QString m_err ;
 		const networkAccess& m_parent ;
 		networkAccess::updateMDOptions m_md ;
@@ -578,7 +612,7 @@ void networkAccess::download( networkAccess::Opts opts ) const
 {
 	const auto& engine = opts.iter.engine() ;
 
-	if( opts.metadata.url().isEmpty() || opts.metadata.fileName().isEmpty() ){
+	if( opts.metadata.url().isEmpty() || opts.metadata.fileName().isEmpty() || opts.filePath.isEmpty() ){
 
 		auto a = "Download Failed: Invalid Url or FileName Not Found" ;
 		auto b = "Url: " + opts.metadata.url() ;
@@ -629,15 +663,24 @@ void networkAccess::downloadP( networkAccess::Opts2& opts2,
 
 			if( opts.metadata.hash().isEmpty() ){
 
-				auto m = QObject::tr( "Skipping Checking Download Hash" ) ;
+				auto m = QObject::tr( "WARNING: no SHA256 digest published for this file, integrity NOT verified" ) ;
 
-				this->post( m_appName,m,opts.id ) ;
+				this->post( engine.name(),utility::barLine(),opts.id ) ;
+				this->post( engine.name(),m,opts.id ) ;
+				this->post( engine.name(),utility::barLine(),opts.id ) ;
 			}else{
 				auto m = opts.hashCalculator->result().toHex().toLower() ;
 
 				if( opts.metadata.hash() != m ){
 
 					this->hashDoNotMatch( opts.metadata.hash(),m,opts.id ) ;
+
+					auto err = utility::removeFile( opts.filePath ) ;
+
+					if( !err.isEmpty() ){
+
+						this->failedToRemove( engine.name(),opts.filePath,err,opts.id ) ;
+					}
 
 					opts.iter.failed() ;
 
@@ -710,28 +753,18 @@ void networkAccess::finished( networkAccess::Opts str ) const
 
 			this->post( engine.name(),mm,str.id ) ;
 
-			QFileInfo ff( str.exeBinPath ) ;
+			if( !this->backupEngine( engine.name(),str.exeBinPath,str ) ){
 
-			if( ff.isDir() ){
+				utility::removeFile( str.file.src() ) ;
 
-				auto m = utility::removeFolder( str.exeBinPath ) ;
-
-				if( !m.isEmpty() ){
-
-					this->failedToRemove( engine.name(),str.exeBinPath,m,str.id ) ;
-				}
-			}else{
-				auto m = utility::removeFile( str.exeBinPath ) ;
-
-				if( !m.isEmpty() ){
-
-					this->failedToRemove( engine.name(),str.exeBinPath,m,str.id ) ;
-				}
+				return this->nextEngine( str,false ) ;
 			}
 
 			auto m = str.file.rename( str.exeBinPath ) ;
 
 			if( m.isEmpty() ){
+
+				this->removeEngineBackup( engine.name(),str ) ;
 
 				utility::setPermissions( str.file.src() ) ;
 
@@ -741,14 +774,139 @@ void networkAccess::finished( networkAccess::Opts str ) const
 			}else{
 				this->failedToRename( engine.name(),str.file.src(),str.exeBinPath,m,str.id ) ;
 
-				if( str.iter.hasNext() ){
+				this->restoreEngine( engine.name(),str ) ;
 
-					m_ctx.getVersionInfo().check( str.iter.next(),false ) ;
-				}else{
-					str.iter.reportDone() ;
-				}
+				this->nextEngine( str,false ) ;
 			}
 		}
+	}
+}
+
+bool networkAccess::backupEngine( const QString& engineName,
+				  const QString& path,
+				  networkAccess::Opts& opts ) const
+{
+	opts.backupPath.clear() ;
+	opts.backupTarget = path ;
+
+	QFileInfo info( path ) ;
+
+	if( !info.exists() ){
+
+		return true ;
+	}
+
+	auto backup = path + ".old" ;
+
+	auto removeBackup = [ & ](){
+
+		if( QFileInfo( backup ).isDir() ){
+
+			return utility::removeFolder( backup ) ;
+		}else{
+			return utility::removeFile( backup ) ;
+		}
+	} ;
+
+	auto m = removeBackup() ;
+
+	if( !m.isEmpty() ){
+
+		this->failedToRemove( engineName,backup,m,opts.id ) ;
+
+		return false ;
+	}
+
+	m = utility::rename( path,backup ) ;
+
+	if( m.isEmpty() ){
+
+		opts.backupPath = backup ;
+
+		return true ;
+	}else{
+		this->failedToRename( engineName,path,backup,m,opts.id ) ;
+
+		return false ;
+	}
+}
+
+void networkAccess::restoreEngine( const QString& engineName,networkAccess::Opts& opts ) const
+{
+	if( opts.backupPath.isEmpty() ){
+
+		return ;
+	}
+
+	const auto& target = opts.backupTarget ;
+
+	auto m = [ & ](){
+
+		if( QFileInfo( target ).isDir() ){
+
+			return utility::removeFolder( target ) ;
+		}else{
+			return utility::removeFile( target ) ;
+		}
+	}() ;
+
+	if( m.isEmpty() ){
+
+		m = utility::rename( opts.backupPath,target ) ;
+
+		if( m.isEmpty() ){
+
+			auto s = QObject::tr( "Update failed, previous version restored" ) ;
+
+			this->post( engineName,s,opts.id ) ;
+		}else{
+			this->failedToRename( engineName,opts.backupPath,target,m,opts.id ) ;
+		}
+	}else{
+		this->failedToRemove( engineName,target,m,opts.id ) ;
+
+		auto s = QObject::tr( "Update failed, previous version kept at: %1" ) ;
+
+		this->post( engineName,s.arg( opts.backupPath ),opts.id ) ;
+	}
+
+	opts.backupPath.clear() ;
+}
+
+void networkAccess::removeEngineBackup( const QString& engineName,networkAccess::Opts& opts ) const
+{
+	if( opts.backupPath.isEmpty() ){
+
+		return ;
+	}
+
+	const auto& backup = opts.backupPath ;
+
+	auto m = [ & ](){
+
+		if( QFileInfo( backup ).isDir() ){
+
+			return utility::removeFolder( backup ) ;
+		}else{
+			return utility::removeFile( backup ) ;
+		}
+	}() ;
+
+	if( !m.isEmpty() ){
+
+		this->failedToRemove( engineName,backup,m,opts.id ) ;
+	}
+
+	opts.backupPath.clear() ;
+}
+
+void networkAccess::nextEngine( networkAccess::Opts& opts,bool s ) const
+{
+	if( opts.iter.hasNext() ){
+
+		m_ctx.getVersionInfo().check( opts.iter.next(),s ) ;
+	}else{
+		opts.iter.reportDone() ;
 	}
 }
 
@@ -772,6 +930,8 @@ void networkAccess::extractArchiveOuput( networkAccess::Opts opts,
 
 			if( m.success() ){
 
+				this->removeEngineBackup( engine.name(),opts ) ;
+
 				auto exe = engine.updateCmdPath( m_ctx.logger(),opts.tempPath ) ;
 
 				QFile f( exe ) ;
@@ -780,14 +940,24 @@ void networkAccess::extractArchiveOuput( networkAccess::Opts opts,
 			}else{
 				this->failedToRename( engine.name(),m.src(),m.dst(),m.err(),opts.id ) ;
 
-				if( opts.iter.hasNext() ){
+				this->restoreEngine( engine.name(),opts ) ;
 
-					m_ctx.getVersionInfo().check( opts.iter.next(),false ) ;
-				}else{
-					opts.iter.reportDone() ;
-				}
+				return this->nextEngine( opts,false ) ;
 			}
 		}else{
+			if( !QFile::exists( opts.exeBinPath ) ){
+
+				auto m = QObject::tr( "Extracted archive does not contain: %1" ) ;
+
+				this->post( engine.name(),m.arg( opts.exeBinPath ),opts.id ) ;
+
+				this->restoreEngine( engine.name(),opts ) ;
+
+				return this->nextEngine( opts,false ) ;
+			}
+
+			this->removeEngineBackup( engine.name(),opts ) ;
+
 			QFile f( opts.exeBinPath ) ;
 
 			f.setPermissions( f.permissions() | QFileDevice::ExeOwner ) ;
@@ -797,12 +967,9 @@ void networkAccess::extractArchiveOuput( networkAccess::Opts opts,
 	}else{		
 		this->failedToExtract( opts.exeArgs,s,opts.id ) ;
 
-		if( opts.iter.hasNext() ){
+		this->restoreEngine( engine.name(),opts ) ;
 
-			m_ctx.getVersionInfo().check( opts.iter.next(),true ) ;
-		}else{
-			opts.iter.reportDone() ;
-		}
+		this->nextEngine( opts,true ) ;
 	}
 }
 
@@ -848,23 +1015,37 @@ void networkAccess::extractArchive( const engines::engine& engine,
 
 	this->post( engine.name(),mm,str.id ) ;
 
+	/*
+	 * Do not delete the currently installed engine before the new one is in
+	 * place, move it aside instead and restore it if anything goes wrong.
+	 */
 	if( engine.archiveContainsFolder() ){
 
-		auto m = engine.deleteEngineBinFolder( str.tempPath ) ;
+		auto path = str.tempPath + "/" + engine.name() ;
 
-		if( !m.isEmpty() ){
+		if( !this->backupEngine( engine.name(),path,str ) ){
 
-			m = QObject::tr( "Trouble Ahead, Failed To Delete Folder: %1" ).arg( m ) ;
+			auto m = QObject::tr( "Update aborted, failed to back up folder: %1" ).arg( path ) ;
 
 			this->post( engine.name(),m,str.id ) ;
+
+			return this->nextEngine( str,true ) ;
 		}
 	}else{
-		auto m = engine.removeFiles( { str.exeBinPath },QFileInfo( str.exeBinPath ).absolutePath() ) ;
+		if( !this->backupEngine( engine.name(),str.exeBinPath,str ) ){
 
-		if( m.size() ){
+			auto m = QObject::tr( "Update aborted, failed to back up file: %1" ).arg( str.exeBinPath ) ;
 
-			this->failedToRemove( engine.name(),m,str.id ) ;
+			this->post( engine.name(),m,str.id ) ;
+
+			return this->nextEngine( str,true ) ;
 		}
+
+		/*
+		 * Extra files shipped with the engine(libwinpthread-1.dll, run-test262 etc)
+		 * are not removed before extraction because they could not be restored
+		 * if extraction fails, the extractor overwrites them instead.
+		 */
 	}
 
 	QStringList extractorArgs ;
@@ -883,7 +1064,7 @@ void networkAccess::extractArchive( const engines::engine& engine,
 
 			if( !extractorExe.isEmpty() ){
 
-				extractorArgs = QStringList{ str.filePath,"-d",str.tempPath } ;
+				extractorArgs = QStringList{ "-o",str.filePath,"-d",str.tempPath } ;
 			}
 		}else{
 			extractorArgs = QStringList{ "-x","-f",str.filePath,"-C",str.tempPath } ;
@@ -906,12 +1087,9 @@ void networkAccess::extractArchive( const engines::engine& engine,
 
 		this->post( engine.name(),m + ": " + mm,str.id ) ;
 
-		if( str.iter.hasNext() ){
+		this->restoreEngine( engine.name(),str ) ;
 
-			m_ctx.getVersionInfo().check( str.iter.next(),true ) ;
-		}else{
-			str.iter.reportDone() ;
-		}
+		this->nextEngine( str,true ) ;
 	}else{
 		const auto& exe = extractorExe ;
 		const auto& args = extractorArgs ;

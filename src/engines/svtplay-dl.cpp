@@ -23,6 +23,11 @@
 #include "../utils/miscellaneous.hpp"
 #include "../utility.h"
 
+#include <QJsonArray>
+
+#include <algorithm>
+#include <vector>
+
 const char * svtplay_dl::testData()
 {
 	return R"R(DEBUG [1689598027.9425933] svtplay-dl/svtplay_dl/utils/getmedia.py/get_media: version: 4.24
@@ -788,11 +793,89 @@ QString svtplay_dl::updateCmdPath( const QString& e )
 	}
 }
 
+static bool _parseTagVersion( const QString& tag,std::vector< qulonglong >& out )
+{
+	auto e = tag.trimmed() ;
+
+	if( e.startsWith( 'v' ) || e.startsWith( 'V' ) ){
+
+		e = e.mid( 1 ) ;
+	}
+
+	if( e.isEmpty() ){
+
+		return false ;
+	}
+
+	out.clear() ;
+
+	const auto parts = e.split( '.' ) ;
+
+	for( const auto& it : parts ){
+
+		bool ok = false ;
+
+		auto m = it.toULongLong( &ok ) ;
+
+		if( !ok || it.isEmpty() ){
+
+			return false ;
+		}
+
+		out.emplace_back( m ) ;
+	}
+
+	return true ;
+}
+
+static bool _tagVersionGreater( const std::vector< qulonglong >& a,const std::vector< qulonglong >& b )
+{
+	auto size = std::max( a.size(),b.size() ) ;
+
+	for( size_t i = 0 ; i < size ; i++ ){
+
+		auto x = i < a.size() ? a[ i ] : 0 ;
+		auto y = i < b.size() ? b[ i ] : 0 ;
+
+		if( x != y ){
+
+			return x > y ;
+		}
+	}
+
+	return false ;
+}
+
+static QString _highestTag( const QJsonArray& array )
+{
+	QString name ;
+	std::vector< qulonglong > best ;
+	std::vector< qulonglong > current ;
+
+	for( const auto& it : array ){
+
+		auto tag = it.toObject().value( "name" ).toString() ;
+
+		if( _parseTagVersion( tag,current ) ){
+
+			if( name.isEmpty() || _tagVersionGreater( current,best ) ){
+
+				name = tag ;
+				best = current ;
+			}
+		}
+	}
+
+	return name ;
+}
+
 engines::metadata svtplay_dl::parseJsonDataFromGitHub( const QJsonDocument& doc )
 {
 	auto array = doc.array() ;
 
-	if( array.size() ){
+	auto name = _highestTag( array ) ;
+
+	if( !name.isEmpty() ){
 
 		QString fileName ;
 		QString url ;
@@ -817,8 +900,6 @@ engines::metadata svtplay_dl::parseJsonDataFromGitHub( const QJsonDocument& doc 
 
 		QJsonObject obj ;
 
-		auto name = array[ 0 ].toObject().value( "name" ).toString() ;
-
 		obj.insert( "browser_download_url",url.arg( name ) ) ;
 		obj.insert( "name",fileName ) ;
 		obj.insert( "digest","" ) ;
@@ -841,11 +922,9 @@ engines::engine::baseEngine::onlineVersion svtplay_dl::versionInfoFromGithub( co
 
 	if( doc.valid() ){
 
-		auto s = doc.toArray() ;
+		auto m = _highestTag( doc.toArray() ) ;
 
-		if( s.size() ){
-
-			auto m = s[ 0 ].toObject().value( "name" ).toString() ;
+		if( !m.isEmpty() ){
 
 			return { m,m } ;
 		}

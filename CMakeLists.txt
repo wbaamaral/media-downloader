@@ -28,28 +28,61 @@ if(${CMAKE_VERSION} VERSION_LESS "3.1.0")
     add_definitions(-std=c++14)
 endif()
 
-option(BUILD_WITH_QT6 "Build with Qt 6" OFF)
+# Seleção do Qt:
+#   -DBUILD_WITH_QT6=ON   -> exige Qt6 (FATAL_ERROR se não encontrado)
+#   -DBUILD_WITH_QT6=OFF  -> exige Qt5 (FATAL_ERROR se não encontrado)
+#   (não definido / AUTO) -> tenta Qt5, depois Qt6
+# Caches antigos guardam BUILD_WITH_QT6 como BOOL (antiga option(), padrao OFF).
+# Esse valor significava "automatico", entao e migrado para AUTO uma vez.
+get_property(MD_QT6_CACHE_TYPE CACHE BUILD_WITH_QT6 PROPERTY TYPE)
+if(MD_QT6_CACHE_TYPE STREQUAL "BOOL")
+    set(BUILD_WITH_QT6 "AUTO" CACHE STRING "Qt major: AUTO (Qt5, senao Qt6), ON (Qt6) ou OFF (Qt5)" FORCE)
+endif()
 
-if(BUILD_WITH_QT6)
-    find_package(Qt6 COMPONENTS Core Widgets Network REQUIRED )
-    message("-- Building With Qt6")
-else()
+set(BUILD_WITH_QT6 "AUTO" CACHE STRING "Qt major: AUTO (Qt5, senao Qt6), ON (Qt6) ou OFF (Qt5)")
+set_property(CACHE BUILD_WITH_QT6 PROPERTY STRINGS AUTO ON OFF)
+
+string(TOUPPER "${BUILD_WITH_QT6}" MD_QT_SELECTION)
+
+if(MD_QT_SELECTION STREQUAL "AUTO" OR MD_QT_SELECTION STREQUAL "")
     find_package(Qt5 COMPONENTS Core QUIET)
     if(Qt5_FOUND)
-        message("-- Building With Qt5")
         set(BUILD_WITH_QT6 OFF)
-        find_package(Qt5 COMPONENTS Core Widgets Network REQUIRED)
     else()
         find_package(Qt6 COMPONENTS Core QUIET)
         if(Qt6_FOUND)
-            message("-- Building With Qt6")
             set(BUILD_WITH_QT6 ON)
-            find_package(Qt6 COMPONENTS Core Widgets Network REQUIRED)
-    else()
-        message( FATAL_ERROR "-- Failed to find Qt5 or Qt6")
+        else()
+            message( FATAL_ERROR "-- Failed to find Qt5 or Qt6")
         endif()
     endif()
+elseif(MD_QT_SELECTION STREQUAL "6")
+    set(BUILD_WITH_QT6 ON)
+elseif(MD_QT_SELECTION STREQUAL "5")
+    set(BUILD_WITH_QT6 OFF)
+elseif(MD_QT_SELECTION)
+    set(BUILD_WITH_QT6 ON)
+else()
+    set(BUILD_WITH_QT6 OFF)
 endif()
+
+if(BUILD_WITH_QT6)
+    find_package(Qt6 COMPONENTS Core Widgets Network QUIET)
+    if(NOT Qt6_FOUND OR NOT Qt6Widgets_FOUND OR NOT Qt6Network_FOUND)
+        message( FATAL_ERROR "-- Qt6 (Core/Widgets/Network) requested but not found (BUILD_WITH_QT6=${MD_QT_SELECTION})")
+    endif()
+    message("-- Building With Qt6")
+else()
+    find_package(Qt5 COMPONENTS Core Widgets Network QUIET)
+    if(NOT Qt5_FOUND OR NOT Qt5Widgets_FOUND OR NOT Qt5Network_FOUND)
+        message( FATAL_ERROR "-- Qt5 (Core/Widgets/Network) requested but not found (BUILD_WITH_QT6=${MD_QT_SELECTION})")
+    endif()
+    message("-- Building With Qt5")
+endif()
+
+# Testes (ctest). Os binários de teste NÃO devem declarar install(): CPack e
+# 'cmake --install' empacotam apenas o aplicativo.
+include(CTest)
 
 if(BUILD_FLATPAK)
 else()
@@ -172,6 +205,10 @@ else()
     endif()
 endif()
 
+if(BUILD_TESTING AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/CMakeLists.txt")
+    add_subdirectory(tests)
+endif()
+
 install(DIRECTORY translations DESTINATION ${CMAKE_INSTALL_DATADIR}/media-downloader FILES_MATCHING PATTERN "*.qm")
 
 # ── CPack (empacotamento DEB/RPM) ─────────────────────────────────────────────
@@ -182,16 +219,31 @@ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "GUI frontend to yt-dlp, gallery-dl and ot
 set(CPACK_PACKAGE_VENDOR "Media Downloader")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
 
-# DEB
+# DEB: dependências de runtime conforme o Qt efetivamente usado
+# (alternativas *t64 cobrem Debian 13+/Ubuntu 24.04+)
 set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
-set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
-set(CPACK_DEBIAN_PACKAGE_DEPENDS
-    "qtbase5-dev (>= 5.15) | qt6-base-dev (>= 6.2), libqt5websockets5-dev | qt6-websockets-dev")
+find_program(MD_DPKG_SHLIBDEPS dpkg-shlibdeps)
+if(MD_DPKG_SHLIBDEPS)
+    set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+else()
+    set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS OFF)
+endif()
+if(BUILD_WITH_QT6)
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS
+        "libqt6core6 (>= 6.2) | libqt6core6t64, libqt6gui6 (>= 6.2) | libqt6gui6t64, libqt6widgets6 (>= 6.2) | libqt6widgets6t64, libqt6network6 (>= 6.2) | libqt6network6t64")
+else()
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS
+        "libqt5core5a (>= 5.15) | libqt5core5t64, libqt5gui5 (>= 5.15) | libqt5gui5t64, libqt5widgets5 (>= 5.15) | libqt5widgets5t64, libqt5network5 (>= 5.15) | libqt5network5t64")
+endif()
 
 # RPM
 set(CPACK_RPM_PACKAGE_GROUP "Applications/Multimedia")
 set(CPACK_RPM_PACKAGE_LICENSE "GPLv2+")
-set(CPACK_RPM_PACKAGE_REQUIRES "qt5-qtbase >= 5.15 or qt6-qtbase >= 6.2")
+if(BUILD_WITH_QT6)
+    set(CPACK_RPM_PACKAGE_REQUIRES "qt6-qtbase >= 6.2, qt6-qtbase-gui >= 6.2")
+else()
+    set(CPACK_RPM_PACKAGE_REQUIRES "qt5-qtbase >= 5.15, qt5-qtbase-gui >= 5.15")
+endif()
 set(CPACK_RPM_PACKAGE_AUTOREQ ON)
 
 include(CPack)
@@ -265,12 +317,9 @@ OutputDir={#MyOutPutPath}
 SetupIconFile={#MySourcesPath}\\src\\media-downloader.ico
 Compression=lzma
 SolidCompression=yes
-DisableProgramGroupPage=yes
 ChangesEnvironment=yes
+DisableProgramGroupPage=yes
 OutputBaseFilename=${OutputBaseFilename}
-
-[Registry]
-Root: HKCU; Subkey: \"Environment\"; ValueType: expandsz; ValueName: \"Path\"; ValueData: \"{olddata};{app}\"; Flags: uninsdeletevalue
 
 [InstallDelete]
 Type: filesandordirs; Name: \"{app}\\3rdParty\"
@@ -279,7 +328,6 @@ Type: filesandordirs; Name: \"{app}\\translations\"
 [Tasks]
 Name: \"desktopicon\"; Description: \"{cm:CreateDesktopIcon}\"; GroupDescription: \"{cm:AdditionalIcons}\"; Flags: unchecked
 Name: \"quicklaunchicon\"; Description: \"{cm:CreateQuickLaunchIcon}\"; GroupDescription: \"{cm:AdditionalIcons}\"; Flags: unchecked; OnlyBelowVersion: 0,6.1
-Name: \"addtopath\"; Description: \"Adicionar ao PATH do sistema (para bsdtar, yt-dlp)\"; GroupDescription: \"Opções adicionais:\"; Flags: checked
 
 [Files]
 Source: {#MyEXELocation}; DestDir: {app}; Flags: ignoreversion
@@ -306,6 +354,55 @@ Name: \"{userappdata}\\Microsoft\\Internet Explorer\\Quick Launch\\{#MyAppName}\
 
 [Run]
 Filename: \"{app}\\{#MyAppExeName}\"; Description: \"{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}\"; Flags: nowait postinstall skipifsilent
+
+[Code]
+; Versoes anteriores deste instalador gravavam {app} no Path do usuario com
+; uninsdeletevalue, o que apagava o Path inteiro ao desinstalar. Esta secao
+; remove {app} do Path ao instalar e, ao desinstalar, restaura o Path salvo
+; antes da execucao do log de desinstalacao antigo.
+var
+  SavedUserPath: String;
+  HadUserPath: Boolean;
+
+function RemovePathEntry(const Path, Entry: String): String;
+var
+  S, Item, R: String;
+  P: Integer;
+begin
+  R := '';
+  S := Path + ';';
+  while Length(S) > 0 do
+  begin
+    P := Pos(';', S);
+    Item := Copy(S, 1, P - 1);
+    Delete(S, 1, P);
+    if (Item <> '') and (CompareText(RemoveBackslashUnlessRoot(Item), RemoveBackslashUnlessRoot(Entry)) <> 0) then
+    begin
+      if R <> '' then
+        R := R + ';';
+      R := R + Item;
+    end;
+  end;
+  Result := R;
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+var
+  P: String;
+begin
+  if CurStep = ssPostInstall then
+    if RegQueryStringValue(HKCU, 'Environment', 'Path', P) then
+      RegWriteExpandStringValue(HKCU, 'Environment', 'Path', RemovePathEntry(P, ExpandConstant('{app}')));
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  if CurUninstallStep = usUninstall then
+    HadUserPath := RegQueryStringValue(HKCU, 'Environment', 'Path', SavedUserPath)
+  else if CurUninstallStep = usPostUninstall then
+    if HadUserPath then
+      RegWriteExpandStringValue(HKCU, 'Environment', 'Path', RemovePathEntry(SavedUserPath, ExpandConstant('{app}')));
+end;
 
 [Languages]
 Name: \"english\"             ; MessagesFile: \"compiler:Default.isl\"
@@ -372,12 +469,9 @@ OutputDir={#MyOutPutPath}
 SetupIconFile={#MySourcesPath}\\src\\media-downloader.ico
 Compression=lzma
 SolidCompression=yes
-DisableProgramGroupPage=yes
 ChangesEnvironment=yes
+DisableProgramGroupPage=yes
 OutputBaseFilename=${OutputBaseFilename}
-
-[Registry]
-Root: HKCU; Subkey: \"Environment\"; ValueType: expandsz; ValueName: \"Path\"; ValueData: \"{olddata};{app}\"; Flags: uninsdeletevalue
 
 [InstallDelete]
 Type: filesandordirs; Name: \"{app}\\3rdParty\"
@@ -410,6 +504,55 @@ Name: \"{userappdata}\\Microsoft\\Internet Explorer\\Quick Launch\\{#MyAppName}\
 
 [Run]
 Filename: \"{app}\\{#MyAppExeName}\"; Description: \"{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}\"; Flags: nowait postinstall skipifsilent
+
+[Code]
+; Versoes anteriores deste instalador gravavam {app} no Path do usuario com
+; uninsdeletevalue, o que apagava o Path inteiro ao desinstalar. Esta secao
+; remove {app} do Path ao instalar e, ao desinstalar, restaura o Path salvo
+; antes da execucao do log de desinstalacao antigo.
+var
+  SavedUserPath: String;
+  HadUserPath: Boolean;
+
+function RemovePathEntry(const Path, Entry: String): String;
+var
+  S, Item, R: String;
+  P: Integer;
+begin
+  R := '';
+  S := Path + ';';
+  while Length(S) > 0 do
+  begin
+    P := Pos(';', S);
+    Item := Copy(S, 1, P - 1);
+    Delete(S, 1, P);
+    if (Item <> '') and (CompareText(RemoveBackslashUnlessRoot(Item), RemoveBackslashUnlessRoot(Entry)) <> 0) then
+    begin
+      if R <> '' then
+        R := R + ';';
+      R := R + Item;
+    end;
+  end;
+  Result := R;
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+var
+  P: String;
+begin
+  if CurStep = ssPostInstall then
+    if RegQueryStringValue(HKCU, 'Environment', 'Path', P) then
+      RegWriteExpandStringValue(HKCU, 'Environment', 'Path', RemovePathEntry(P, ExpandConstant('{app}')));
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  if CurUninstallStep = usUninstall then
+    HadUserPath := RegQueryStringValue(HKCU, 'Environment', 'Path', SavedUserPath)
+  else if CurUninstallStep = usPostUninstall then
+    if HadUserPath then
+      RegWriteExpandStringValue(HKCU, 'Environment', 'Path', RemovePathEntry(SavedUserPath, ExpandConstant('{app}')));
+end;
 
 [Languages]
 Name: \"english\"             ; MessagesFile: \"compiler:Default.isl\"

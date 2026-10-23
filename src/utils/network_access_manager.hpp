@@ -169,6 +169,7 @@ namespace utils
 				{
 					QObject::disconnect( m_networkConn ) ;
 					QObject::disconnect( m_timerConn ) ;
+					QObject::disconnect( m_progressConn ) ;
 					m_timer.stop() ;
 					m_reply( { m_networkReply,timeOut } ) ;
 					m_progress( { true,timeOut,m_networkReply,0,0 } ) ;
@@ -186,11 +187,16 @@ namespace utils
 
 					return s ;
 				}
-				void start( int timeOut,QMetaObject::Connection&& nc,QMetaObject::Connection&& tc )
+				void start( int timeOut,
+					    QMetaObject::Connection&& pc,
+					    QMetaObject::Connection&& nc,
+					    QMetaObject::Connection&& tc )
 				{
+					m_timeOut = timeOut ;
+					m_progressConn = std::move( pc ) ;
 					m_networkConn = std::move( nc ) ;
 					m_timerConn = std::move( tc ) ;
-					m_timer.start( timeOut ) ;
+					m_timer.start( m_timeOut ) ;
 				}
 				QNetworkReply * networkReply()
 				{
@@ -200,12 +206,18 @@ namespace utils
 				{
 					return &m_timer ;
 				}
-				void stopTimer()
+				void restartTimer()
 				{
-					if( m_stopTimer ){
+					/*
+					 * Inactivity timeout: every time data arrives we restart
+					 * the timer so that it only fires if nothing is received
+					 * for "timeOut" milliseconds. The timer is not active
+					 * once a result has been delivered and we must not
+					 * re-arm it then.
+					 */
+					if( m_timer.isActive() ){
 
-						m_timer.stop() ;
-						m_stopTimer = false ;
+						m_timer.start( m_timeOut ) ;
 					}
 				}
 				void progress( qint64 r,qint64 t )
@@ -221,12 +233,13 @@ namespace utils
 				}
 			private:
 				bool m_firstSeen = true ;
-				bool m_stopTimer = true ;
+				int m_timeOut = 0 ;
 				QTimer m_timer ;
 				Reply m_reply ;
 				Progress m_progress ;
 				QMutex& m_mutex ;
 				QNetworkReply& m_networkReply ;
+				QMetaObject::Connection m_progressConn ;
 				QMetaObject::Connection m_networkConn ;
 				QMetaObject::Connection m_timerConn ;
 			} ;
@@ -235,14 +248,14 @@ namespace utils
 			{
 				auto hdl = std::make_shared< handle< Reply,Progress > >( std::move( reply ),std::move( progress ),*s,m_mutex ) ;
 
-				QObject::connect( s,&QNetworkReply::downloadProgress,[ &h = *hdl,function = std::move( function ) ]( qint64 r,qint64 t ){
+				auto pc = QObject::connect( s,&QNetworkReply::downloadProgress,[ &h = *hdl,function = std::move( function ) ]( qint64 r,qint64 t ){
 
-					h.stopTimer() ;
+					h.restartTimer() ;
 
 					function( h,r,t ) ;
 				} ) ;
 
-				hdl->start( m_timeOut,QObject::connect( hdl->networkReply(),&QNetworkReply::finished,[ hdl ](){
+				hdl->start( m_timeOut,std::move( pc ),QObject::connect( hdl->networkReply(),&QNetworkReply::finished,[ hdl ](){
 
 					if( hdl->firstSeen() ){
 

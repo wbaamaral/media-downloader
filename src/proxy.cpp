@@ -137,41 +137,9 @@ static void _get_proxy_from_gateway_win( Context& ctx,const QByteArray& addr,boo
 
 using mm = settings::proxySettings ;
 
-void proxy::set( Context& ctx,bool firstTime,const QByteArray& proxyAddress,const mm::type& m )
+static void _set( Context& ctx,bool firstTime,const QByteArray& proxyAddress,const mm::type& m )
 {
-	if( utility::platformIsWindows() && m.system() ){
-
-		class meaw
-		{
-		public:
-			meaw( Context& ctx,bool firstTime ) :
-				m_ctx( ctx ),m_firstTime( firstTime )
-			{
-			}
-			QList< QNetworkProxy > bg()
-			{
-				return QNetworkProxyFactory::systemProxyForQuery() ;
-			}
-			void fg( const QList< QNetworkProxy >& m )
-			{
-				for( const auto& it : m ){
-
-					if( !it.hostName().isEmpty() ){
-
-						return m_ctx.setNetworkProxy( it,m_firstTime ) ;
-					}
-				}
-
-				m_ctx.setNetworkProxy( m_firstTime ) ;
-			}
-		private:
-			Context& m_ctx ;
-			bool m_firstTime ;
-		} ;
-
-		utils::qthread::run( meaw( ctx,firstTime ) ) ;
-
-	}else if( m.none() ){
+	if( m.none() ){
 
 		ctx.setNetworkProxy( firstTime ) ;
 
@@ -193,5 +161,74 @@ void proxy::set( Context& ctx,bool firstTime,const QByteArray& proxyAddress,cons
 		}
 	}else{
 		ctx.setNetworkProxy( proxyAddress,firstTime ) ;
+	}
+}
+
+/*
+ * Incremented every time a proxy is set,used to discard results of
+ * background proxy lookups that were superseded by a newer setting.
+ */
+static quint64 _proxy_generation = 0 ;
+
+void proxy::set( Context& ctx,
+		 bool firstTime,
+		 const QByteArray& proxyAddress,
+		 const mm::type& m,
+		 std::function< void() > done )
+{
+	auto generation = ++_proxy_generation ;
+
+	if( utility::platformIsWindows() && m.system() ){
+
+		class meaw
+		{
+		public:
+			meaw( Context& ctx,bool firstTime,quint64 g,std::function< void() > d ) :
+				m_ctx( ctx ),m_firstTime( firstTime ),m_generation( g ),m_done( std::move( d ) )
+			{
+			}
+			QList< QNetworkProxy > bg()
+			{
+				return QNetworkProxyFactory::systemProxyForQuery() ;
+			}
+			void fg( const QList< QNetworkProxy >& m )
+			{
+				if( m_generation == _proxy_generation ){
+
+					this->apply( m ) ;
+				}
+
+				if( m_done ){
+
+					m_done() ;
+				}
+			}
+		private:
+			void apply( const QList< QNetworkProxy >& m )
+			{
+				for( const auto& it : m ){
+
+					if( !it.hostName().isEmpty() ){
+
+						return m_ctx.setNetworkProxy( it,m_firstTime ) ;
+					}
+				}
+
+				m_ctx.setNetworkProxy( m_firstTime ) ;
+			}
+			Context& m_ctx ;
+			bool m_firstTime ;
+			quint64 m_generation ;
+			std::function< void() > m_done ;
+		} ;
+
+		utils::qthread::run( meaw( ctx,firstTime,generation,std::move( done ) ) ) ;
+	}else{
+		_set( ctx,firstTime,proxyAddress,m ) ;
+
+		if( done ){
+
+			done() ;
+		}
 	}
 }

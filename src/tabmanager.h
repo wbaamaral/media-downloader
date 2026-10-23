@@ -78,7 +78,9 @@ public:
 	void setProxy( const settings::proxySettings&,const settings::proxySettings::type& ) ;
 private:
 	void initDone() ;
+	void checkForUpdates() ;
 	bool m_initDoneNotCalled = true ;
+	bool m_updateCheckPending = false ;
 	void clipboardEvent( QClipboard::Mode ) ;
 	void mainThreadClipboardHandler() ;
 	void bgThreadClipboardHandler() ;

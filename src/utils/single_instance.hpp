@@ -192,14 +192,61 @@ namespace utils
 
 					auto s = m_localServer.nextPendingConnection() ;
 
-					QObject::connect( s,&QLocalSocket::readyRead,[ this,s ]{
+					if( !s ){
 
-						m_mainApp->hasEvent( s->readAll() ) ;
+						return ;
+					}
+
+					/*
+					 * The client writes its whole message and then closes
+					 * the connection. Data may arrive in several chunks so
+					 * we accumulate it and deliver it only on disconnect.
+					 */
+					auto buffer = std::make_shared< QByteArray >() ;
+
+					QObject::connect( s,&QLocalSocket::readyRead,[ s,buffer ]{
+
+						buffer->append( s->readAll() ) ;
+					} ) ;
+
+					QObject::connect( s,&QLocalSocket::disconnected,[ this,s,buffer ]{
+
+						buffer->append( s->readAll() ) ;
+
+						if( !buffer->isEmpty() ){
+
+							m_mainApp->hasEvent( *buffer ) ;
+						}
+
 						s->deleteLater() ;
 					} ) ;
+
+					if( s->state() == QLocalSocket::UnconnectedState ){
+
+						buffer->append( s->readAll() ) ;
+
+						if( !buffer->isEmpty() ){
+
+							m_mainApp->hasEvent( *buffer ) ;
+						}
+
+						s->deleteLater() ;
+					}
 				} ) ;
 
-				m_localServer.listen( m_info.socketPath ) ;
+				if( !m_localServer.listen( m_info.socketPath ) ){
+
+					std::cout << "Failed to listen on local socket: " ;
+					std::cout << m_localServer.errorString().toStdString() << std::endl ;
+
+					QLocalServer::removeServer( m_info.socketPath ) ;
+
+					if( !m_localServer.listen( m_info.socketPath ) ){
+
+						std::cout << "Failed to listen on local socket again: " ;
+						std::cout << m_localServer.errorString().toStdString() << std::endl ;
+					}
+				}
 
 				m_lockFile.unlock() ;
 			}

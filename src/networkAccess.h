@@ -22,6 +22,7 @@
 #include <memory>
 
 #include <QFile>
+#include <QFileInfo>
 #include <QStringList>
 #include <QCryptographicHash>
 
@@ -451,7 +452,28 @@ private:
 		{
 			metadata = std::move( m ) ;
 
-			filePath = tempPath + "/" + metadata.fileName() ;
+			auto name = metadata.fileName() ;
+
+			if( name.contains( '/' ) || name.contains( '\\' ) ){
+
+				/*
+				 * Remote metadata must never be able to point us outside
+				 * of the temporary folder.
+				 */
+				name.clear() ;
+			}else{
+				name = QFileInfo( name ).fileName() ;
+			}
+
+			if( name.isEmpty() || name == "." || name == ".." ){
+
+				filePath.clear() ;
+				isArchive = false ;
+
+				return ;
+			}
+
+			filePath = tempPath + "/" + name ;
 
 			isArchive = filePath.endsWith( ".zip" ) || filePath.contains( ".tar." ) ;
 
@@ -469,6 +491,8 @@ private:
 		engines::metadata metadata ;
 		QString filePath ;
 		QString tempPath ;
+		QString backupPath ;
+		QString backupTarget ;
 		cmdArgs exeArgs ;
 		class NetworkError
 		{
@@ -595,6 +619,11 @@ private:
 	void download( const QByteArray&,const engines::engine&,networkAccess::Opts ) const ;
 
 	void finished( networkAccess::Opts ) const ;
+
+	bool backupEngine( const QString&,const QString&,networkAccess::Opts& ) const ;
+	void restoreEngine( const QString&,networkAccess::Opts& ) const ;
+	void removeEngineBackup( const QString&,networkAccess::Opts& ) const ;
+	void nextEngine( networkAccess::Opts&,bool ) const ;
 
 	void post( const QString&,const QString&,int ) const ;
 

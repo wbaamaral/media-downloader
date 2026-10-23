@@ -20,7 +20,13 @@
 #include "settings.h"
 #include "context.hpp"
 
+#include <functional>
+
 namespace proxy
 {
-	void set( Context&,bool,const QByteArray&,const settings::proxySettings::type& ) ;
+	/*
+	 * The last argument is called on the GUI thread once the proxy
+	 * has been applied,it may be called synchronously.
+	 */
+	void set( Context&,bool,const QByteArray&,const settings::proxySettings::type&,std::function< void() > = {} ) ;
 }

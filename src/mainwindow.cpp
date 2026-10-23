@@ -30,6 +30,21 @@
 
 #include <QScreen>
 #include <QGuiApplication>
+#include <QDebug>
+
+#include <cstring>
+
+#ifndef Q_OS_WIN
+	#include <QSocketNotifier>
+	#include <sys/types.h>
+	#include <sys/socket.h>
+	#include <unistd.h>
+	#include <fcntl.h>
+	#include <signal.h>
+	#include <cerrno>
+
+	static int _signalFds[ 2 ] = { -1,-1 } ;
+#endif
 
 MainWindow::MainWindow( QApplication& app,
 			settings& s,
@@ -202,6 +217,16 @@ void MainWindow::processEvent( const QByteArray& m )
 
 void MainWindow::processEventSlot( const QByteArray& e )
 {
+	if( this->isMinimized() ){
+
+		this->showNormal() ;
+	}else{
+		this->show() ;
+	}
+
+	this->raise() ;
+	this->activateWindow() ;
+
 	m_tabManager.gotEvent( e ) ;
 }
 
@@ -244,30 +269,116 @@ void MainWindow::notifyOnAllDownloadComplete( const QString& e )
 
 MainWindow::~MainWindow()
 {
+	m_mainWindow = nullptr ;
+
 	m_settings.saveMainWindowDimensions( this->window()->geometry() ) ;
 }
 
-MainWindow * MainWindow::m_mainWindow ;
+MainWindow * MainWindow::m_mainWindow = nullptr ;
 
 void MainWindow::setUpSignals( MainWindow * m )
 {
 	m_mainWindow = m ;
-	MainWindow::setUpSignal( SIGTERM,SIGSEGV,SIGINT,SIGABRT ) ;
+
+	/*
+	 * SIGSEGV and SIGABRT are deliberately not handled, there is nothing
+	 * safe we can do in them and returning from a SIGSEGV handler just
+	 * re-triggers the fault.
+	 */
+#ifdef Q_OS_WIN
+	MainWindow::setUpSignal( SIGTERM,SIGINT ) ;
+#else
+	if( ::socketpair( AF_UNIX,SOCK_STREAM,0,_signalFds ) != 0 ){
+
+		qDebug() << "Failed to create signal socketpair,signals will not be handled" ;
+		return ;
+	}
+
+	for( auto fd : _signalFds ){
+
+		::fcntl( fd,F_SETFD,FD_CLOEXEC ) ;
+	}
+
+	::fcntl( _signalFds[ 0 ],F_SETFL,::fcntl( _signalFds[ 0 ],F_GETFL ) | O_NONBLOCK ) ;
+
+	auto sn = new QSocketNotifier( _signalFds[ 1 ],QSocketNotifier::Read,m ) ;
+
+	QObject::connect( sn,&QSocketNotifier::activated,[ m,sn ](){
+
+		sn->setEnabled( false ) ;
+
+		char buffer ;
+
+		while( ::read( _signalFds[ 1 ],&buffer,1 ) < 0 && errno == EINTR ){}
+
+		m->quitApp() ;
+
+		sn->setEnabled( true ) ;
+	} ) ;
+
+	MainWindow::setUpSignal( SIGTERM,SIGINT ) ;
+#endif
 }
 
 void MainWindow::signalHandler( int )
 {
-	m_mainWindow->quitApp() ;
+#ifdef Q_OS_WIN
+	/*
+	 * On Windows, signal handlers run on a different thread, queue
+	 * the call to run on the GUI thread.
+	 */
+	auto m = m_mainWindow ;
+
+	if( m ){
+
+		QMetaObject::invokeMethod( m,"quitApp",Qt::QueuedConnection ) ;
+	}
+#else
+	/*
+	 * Only async-signal-safe functions here, the actual work is done
+	 * in the GUI thread when the socket notifier fires.
+	 */
+	auto err = errno ;
+
+	char m = 1 ;
+
+	auto r = ::write( _signalFds[ 0 ],&m,1 ) ;
+
+	Q_UNUSED( r )
+
+	errno = err ;
+#endif
 }
 
 void MainWindow::setUpSignal( int sig )
 {
+#ifdef Q_OS_WIN
 	std::signal( sig,MainWindow::signalHandler ) ;
+#else
+	struct sigaction sa ;
+
+	::memset( &sa,0,sizeof( sa ) ) ;
+
+	sa.sa_handler = MainWindow::signalHandler ;
+	sa.sa_flags = SA_RESTART ;
+
+	::sigemptyset( &sa.sa_mask ) ;
+
+	if( ::sigaction( sig,&sa,nullptr ) != 0 ){
+
+		qDebug() << "Failed to set up handler for signal:" << sig ;
+	}
+#endif
+}
+
+bool MainWindow::trayIconUsable()
+{
+	return m_showTrayIcon && QSystemTrayIcon::isSystemTrayAvailable() && m_trayIcon.isVisible() ;
 }
 
 void MainWindow::closeEvent( QCloseEvent * )
 {
-	if( m_showTrayIcon ){
+	if( this->trayIconUsable() ){
 
 		this->hide() ;
 	}else{

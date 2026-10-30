@@ -56,7 +56,7 @@ Opções:
   --qt6              Forçar build com Qt6 (falha se Qt6 não existir)
   --clean            Limpar build/ antes de configurar
   --install-deps     Instalar dependências do sistema (requer root; Qt6 com --qt6, senão Qt5)
-  --package FORMAT   Empacotar: tarball, deb, rpm, all
+  --package FORMAT   Empacotar: tarball, deb, rpm, arch, all
   --jobs N           Paralelismo (padrão: $(nproc))
   --run              Executar após build
   --no-tests         Não executar ctest após o build
@@ -249,10 +249,56 @@ package_rpm() {
     ok "RPM gerado em $DIST_DIR/"
 }
 
+package_arch() {
+    title "Gerando pacote Arch Linux (.pkg.tar.zst)"
+    local ver
+    ver="$(< "$BUILD_DIR/VERSION_INFO")"
+    local staging="$BUILD_DIR/_pkg_arch"
+    local qt_dep="qt5-base"
+    if grep -q "BUILD_WITH_QT6:STRING=ON" "$BUILD_DIR/CMakeCache.txt" 2>/dev/null; then
+        qt_dep="qt6-base"
+    fi
+
+    if ! command -v makepkg >/dev/null 2>&1; then
+        warn "makepkg não encontrado — pulando geração de pacote Arch Linux"
+        return 0
+    fi
+
+    run "rm -rf '$staging'"
+    run "mkdir -p '$staging'"
+
+    cat << EOF > "$staging/PKGBUILD"
+# Maintainer: Welyqrson Bastos Amaral <welyqrson@gmail.com>
+pkgname=media-downloader
+pkgver=${ver}
+pkgrel=1
+pkgdesc="GUI frontend to yt-dlp, gallery-dl and others"
+arch=('x86_64')
+url="https://github.com/mhogomchungu/media-downloader"
+license=('GPL2')
+depends=('${qt_dep}')
+optdepends=(
+    'yt-dlp: video downloading backend'
+    'gallery-dl: image/gallery downloading backend'
+    'ffmpeg: media processing and muxing'
+    'aria2: multi-connection downloader'
+)
+
+package() {
+    cmake --install "${BUILD_DIR}" --prefix "\$pkgdir/usr"
+}
+EOF
+
+    run "( cd '$staging' && PKGEXT='.pkg.tar.zst' makepkg -f --nodeps )"
+    run "mv '$staging'/*.pkg.tar* '$DIST_DIR/'"
+    ok "Pacote Arch gerado em $DIST_DIR/"
+}
+
 package_all() {
     package_tarball
     package_deb
     package_rpm
+    package_arch
 }
 
 do_package() {
@@ -260,9 +306,10 @@ do_package() {
         tarball)  package_tarball ;;
         deb)      package_deb ;;
         rpm)      package_rpm ;;
+        arch)     package_arch ;;
         all)      package_all ;;
         "")       ;;  # sem empacotamento
-        *) die "Formato desconhecido: $PACKAGE_FORMAT (use: tarball, deb, rpm, all)" ;;
+        *) die "Formato desconhecido: $PACKAGE_FORMAT (use: tarball, deb, rpm, arch, all)" ;;
     esac
 }
 
@@ -307,4 +354,7 @@ title "BUILD CONCLUÍDO"
 ok "Binário: $BUILD_DIR/media-downloader"
 [[ -n "$PACKAGE_FORMAT" ]] && ok "Pacotes em: $DIST_DIR/"
 ok "Log completo: $LOG_FILE"
-$DRY_RUN && warn "Dry-run: reexecute sem --dry-run para aplicar."
+if $DRY_RUN; then
+    warn "Dry-run: reexecute sem --dry-run para aplicar."
+fi
+exit 0

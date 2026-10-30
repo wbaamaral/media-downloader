@@ -18,12 +18,11 @@
  */
 
 #include "networkAccess.h"
-
-#include "networkAccess.h"
 #include "tabmanager.h"
 #include "basicdownloader.h"
 #include "settings.h"
 #include "utils/threads.hpp"
+#include "utils/url_allowlist.hpp"
 #include "context.hpp"
 
 #include <QFile>
@@ -263,6 +262,19 @@ void networkAccess::uMediaDownloaderM( networkAccess::updateMDOptions& md,
 
 void networkAccess::updateMediaDownloader( networkAccess::updateMDOptions md ) const
 {
+	if( !utils::url::isBinaryDownloadAllowed( md.url ) ){
+
+		md.status.done() ;
+
+		auto m = QObject::tr( "Download Failed: Untrusted download URL: %1" ).arg( md.url ) ;
+
+		this->post( m_appName,m,md.id ) ;
+
+		m_tabManager.enableAll() ;
+
+		return ;
+	}
+
 	auto e = m_ctx.Engines().engineDirPaths().tmp( md.name ) ;
 
 	md.tmpFile = QDir::fromNativeSeparators( e ) ;
@@ -612,7 +624,10 @@ void networkAccess::download( networkAccess::Opts opts ) const
 {
 	const auto& engine = opts.iter.engine() ;
 
-	if( opts.metadata.url().isEmpty() || opts.metadata.fileName().isEmpty() || opts.filePath.isEmpty() ){
+	if( opts.metadata.url().isEmpty() ||
+	    opts.metadata.fileName().isEmpty() ||
+	    opts.filePath.isEmpty() ||
+	    !utils::url::isBinaryDownloadAllowed( opts.metadata.url() ) ){
 
 		auto a = "Download Failed: Invalid Url or FileName Not Found" ;
 		auto b = "Url: " + opts.metadata.url() ;
@@ -766,7 +781,7 @@ void networkAccess::finished( networkAccess::Opts str ) const
 
 				this->removeEngineBackup( engine.name(),str ) ;
 
-				utility::setPermissions( str.file.src() ) ;
+				utility::setPermissions( str.exeBinPath ) ;
 
 				engine.updateCmdPath( m_ctx.logger(),str.exeBinPath ) ;
 

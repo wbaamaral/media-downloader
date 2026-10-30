@@ -200,37 +200,43 @@ namespace utils
 					/*
 					 * The client writes its whole message and then closes
 					 * the connection. Data may arrive in several chunks so
-					 * we accumulate it and deliver it only on disconnect.
+					 * we accumulate it and deliver it only once on disconnect.
 					 */
 					auto buffer = std::make_shared< QByteArray >() ;
+					auto delivered = std::make_shared< bool >( false ) ;
+
+					auto deliver = [ this,s,buffer,delivered ](){
+
+						if( *delivered ){
+
+							return ;
+						}
+
+						*delivered = true ;
+
+						buffer->append( s->readAll() ) ;
+
+						if( !buffer->isEmpty() ){
+
+							auto msg = std::move( *buffer ) ;
+							buffer->clear() ;
+
+							m_mainApp->hasEvent( msg ) ;
+						}
+
+						s->deleteLater() ;
+					} ;
 
 					QObject::connect( s,&QLocalSocket::readyRead,[ s,buffer ]{
 
 						buffer->append( s->readAll() ) ;
 					} ) ;
 
-					QObject::connect( s,&QLocalSocket::disconnected,[ this,s,buffer ]{
-
-						buffer->append( s->readAll() ) ;
-
-						if( !buffer->isEmpty() ){
-
-							m_mainApp->hasEvent( *buffer ) ;
-						}
-
-						s->deleteLater() ;
-					} ) ;
+					QObject::connect( s,&QLocalSocket::disconnected,deliver ) ;
 
 					if( s->state() == QLocalSocket::UnconnectedState ){
 
-						buffer->append( s->readAll() ) ;
-
-						if( !buffer->isEmpty() ){
-
-							m_mainApp->hasEvent( *buffer ) ;
-						}
-
-						s->deleteLater() ;
+						deliver() ;
 					}
 				} ) ;
 

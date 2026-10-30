@@ -967,11 +967,16 @@ QString settings::textEncoding( const QString& engineName )
 {
 	/*
 	 * "YtDlpTextEncoding" is the key used by older versions, keep honoring it
-	 * so existing users do not lose their configured encoding.
+	 * for yt-dlp so existing users do not lose their configured encoding.
 	 */
-	auto m = m_settings.value( "YtDlpTextEncoding" ).toString() ;
+	QString fallback ;
 
-	return this->getOption( "TextEncoding_" + engineName,m ) ;
+	if( engineName == "yt-dlp" ){
+
+		fallback = m_settings.value( "YtDlpTextEncoding" ).toString() ;
+	}
+
+	return this->getOption( "TextEncoding_" + engineName,fallback ) ;
 }
 
 void settings::setTextEncoding( const QString& e,const QString& engineName )

@@ -274,7 +274,7 @@ MainWindow::~MainWindow()
 	m_settings.saveMainWindowDimensions( this->window()->geometry() ) ;
 }
 
-MainWindow * MainWindow::m_mainWindow = nullptr ;
+std::atomic< MainWindow * > MainWindow::m_mainWindow{ nullptr } ;
 
 void MainWindow::setUpSignals( MainWindow * m )
 {
@@ -327,7 +327,7 @@ void MainWindow::signalHandler( int )
 	 * On Windows, signal handlers run on a different thread, queue
 	 * the call to run on the GUI thread.
 	 */
-	auto m = m_mainWindow ;
+	auto m = m_mainWindow.load() ;
 
 	if( m ){
 

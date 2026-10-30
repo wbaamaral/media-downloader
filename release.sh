@@ -133,7 +133,7 @@ PACKAGES=()
 while IFS= read -r -d '' f; do
     PACKAGES+=("$f")
     info "  $(basename "$f") ($(du -h "$f" | cut -f1))"
-done < <(find "$DIST_DIR" -maxdepth 1 -type f \( -name "*.tar.xz" -o -name "*.deb" -o -name "*.rpm" -o -name "*.zip" -o -name "*.exe" \) -print0)
+done < <(find "$DIST_DIR" -maxdepth 1 -type f \( -name "*.tar.xz" -o -name "*.deb" -o -name "*.rpm" -o -name "*.zip" -o -name "*.exe" -o -name "*.pkg.tar.zst" -o -name "*.pkg.tar" \) -print0)
 
 if [[ ${#PACKAGES[@]} -eq 0 ]]; then
     if $DRY_RUN; then

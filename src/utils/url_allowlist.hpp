@@ -79,5 +79,29 @@ namespace utils
 
 			return false ;
 		}
+
+		/*
+		 * Trusted origins for binary engine and application update downloads.
+		 */
+		static inline const QStringList& binaryDownloadAllowlist()
+		{
+			static const QStringList list{
+				"https://github.com",
+				"https://objects.githubusercontent.com",
+				"https://raw.githubusercontent.com",
+				"https://codeberg.org",
+				"https://bellard.org/quickjs/binary_releases"
+			} ;
+
+			return list ;
+		}
+
+		/*
+		 * Returns true if "url" is a trusted download URL for engine or application assets.
+		 */
+		static inline bool isBinaryDownloadAllowed( const QString& url )
+		{
+			return isAllowed( url,binaryDownloadAllowlist() ) ;
+		}
 	}
 }

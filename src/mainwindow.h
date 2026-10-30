@@ -28,6 +28,8 @@
 #include <QMenu>
 #include <QShortcut>
 
+#include <atomic>
+
 #include "tabmanager.h"
 #include "engines.h"
 #include "logger.h"
@@ -111,7 +113,7 @@ private:
 	utility::printOutPut m_printOutPut ;
 	tabManager m_tabManager ;
 	settings& m_settings ;
-	static MainWindow * m_mainWindow ;
+	static std::atomic< MainWindow * > m_mainWindow ;
 	bool m_showTrayIcon ;
 	QShortcut m_shortcut ;
 	void closeEvent( QCloseEvent * ) override ;
